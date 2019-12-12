@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
@@ -20,6 +21,7 @@ import android.webkit.WebViewClient;
  * An activity that hosts a WebView where we can show deepviews.
  * See {@link BranchLinkResult#openDeepView(Context)}.
  */
+@Keep
 public class BranchDeepViewActivity extends FragmentActivity {
 
     private static final String METADATA_KEY = "io.branch.sdk.DeepViewActivity";
