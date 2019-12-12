@@ -22,10 +22,17 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:name="io.branch.search.BranchDeepViewActivity"/>
+
         <activity android:name=".BranchPreferenceActivity" />
 
         <!-- The demo Branch Key.  Please replace this key with your own key before release. -->
         <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_jgKhogSvbj1sZ7PJiQ47dfkozAmfeA4H" />
+
+        <!-- The activity in which Branch DeepViews should be loaded, extending BranchDeepViewActivity or BranchDeepViewActivity itself. -->
+        <meta-data android:name="io.branch.sdk.DeepViewActivity" android:value="io.branch.search.BranchDeepViewActivity" />
 
     </application>
 

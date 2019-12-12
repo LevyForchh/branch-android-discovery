@@ -132,18 +132,28 @@ public class BranchLinkResult implements Parcelable {
      * The content preview will be rendered inside a in-app web view with the option to
      * download the app from the play store.
      *
-     * @param manager a fragment manager
+     * IMPORTANT: To open Deepviews, you should declare a BranchDeepViewActivity or a subclass
+     * of it in your manifest file.
+     *
+     * If a subclass is used, it must also be registered in the application metadata:
+     * <pre> {@code
+     *   <meta-data
+     *       android:name="io.branch.sdk.DeepViewActivity"
+     *       android:value="io.branch.search.BranchDeepViewActivity"/>
+     * } </pre>
+     *
+     * @param context a context
      * @return an error if the deep view could not be opened
      */
     @SuppressWarnings("unused")
     @Nullable
-    public BranchSearchError openDeepView(@NonNull FragmentManager manager) {
+    public BranchSearchError openDeepView(@NonNull Context context) {
         registerClickEvent();
 
         // NOTE: We never return an error, but we might in a future implementation.
         // This also is consistent with openContent(Context, boolean).
-        BranchDeepViewFragment fragment = BranchDeepViewFragment.getInstance(this);
-        fragment.show(manager, "BranchDeepViewFragment");
+        Intent intent = BranchDeepViewActivity.getIntent(context, this);
+        context.startActivity(intent);
         return null;
     }
 

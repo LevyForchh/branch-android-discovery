@@ -114,6 +114,7 @@ public class BranchDeepViewFragment extends DialogFragment {
                     } else if (url.contains("play.google.com")) {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                         startActivity(intent);
+                        dismiss();
                         return true;
                     } else {
                         return false;
