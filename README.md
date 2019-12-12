@@ -244,9 +244,27 @@ Branch will also return relevant content to the user query. These are deep links
 | getImageUrl | String | Gets the URL of the content image for display |
 | | | |
 | openContent(Context, boolean fallbackToPlayStore) | BranchSearchError | Branch is great at deep link routing, so we wanted to abstract away this complexity from you. When a user taps on an action, you simply need to call `completeAction()` to trigger the user to be routed to the content or website. |
-| openDeepView(FragmentManager) | BranchSearchError | Opens the link into a [Branch Deepview](https://branch.io/deepviews/). The content preview will be rendered inside a in-app web view with the option to download the app from the play store. |
+| openDeepView(Context) | BranchSearchError | Opens the link into a [Branch Deepview](https://branch.io/deepviews/). The content preview will be rendered inside a in-app web view with the option to download the app from the play store. |
 | registerClickEvent() | none | If you decide to handle routing on your own with the URI scheme / web link included in the link result, please call this method when the user taps. _This is not required if you use openContent or openDeepView_ |
 
+To use `openDeepView(Context)`, the `BranchDeepViewActivity` should be defined in your Manifest file.
+We provide a default theme to show the activity as a dialog:
+
+```xml
+<activity
+    android:name="io.branch.search.BranchDeepViewActivity"
+    android:excludeFromRecents="true"
+    android:theme="@style/BranchDeepViewActivity"/>
+```
+
+You can also use your own activity and have full control over the view hierarchy and behavior.
+To do so, extend `BranchDeepViewActivity` and declare your class name in the Manifest:
+
+```xml
+<meta-data 
+    android:name="io.branch.sdk.DeepViewActivity"
+    android:value="com.package.CustomDeepViewActivity" />
+```
 
 ## Handling errors with `BranchSearchError`
 

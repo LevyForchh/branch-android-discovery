@@ -101,7 +101,7 @@ public class BranchDeepViewActivity extends FragmentActivity {
                     " register it in the application metadata:\n\n" +
                     "<meta-data\n" +
                     "    android:name=\"io.branch.sdk.DeepViewActivity\"\n" +
-                    "    android:value=\"com.package.MyDeepViewActivity\"/>");
+                    "    android:value=\"com.package.CustomDeepViewActivity\"/>");
         }
 
         // We can go on.
