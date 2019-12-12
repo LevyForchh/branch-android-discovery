@@ -114,6 +114,7 @@ public class BranchDeepViewActivity extends FragmentActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.branch_deepview_activity);
+        setFinishOnTouchOutside(true);
         WebView webView = getWebView();
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(false);

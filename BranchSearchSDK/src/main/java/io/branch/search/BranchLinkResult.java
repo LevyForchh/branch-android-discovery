@@ -133,7 +133,8 @@ public class BranchLinkResult implements Parcelable {
      * download the app from the play store.
      *
      * IMPORTANT: To open Deepviews, you should declare a BranchDeepViewActivity or a subclass
-     * of it in your manifest file.
+     * of it in your manifest file. To present the activity as a floating dialog, you
+     * can use {@code android:theme="@style/BranchDeepViewActivity" }.
      *
      * If a subclass is used, it must also be registered in the application metadata:
      * <pre> {@code
