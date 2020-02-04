@@ -1,7 +1,10 @@
 package io.branch.search;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -12,6 +15,8 @@ import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 /**
  * Class for representing a a deep link to content
@@ -29,6 +34,15 @@ public class BranchLinkResult implements Parcelable {
     private static final String LINK_ROUTING_MODE_KEY = "routing_mode";
     private static final String LINK_TRACKING_KEY = "click_tracking_link";
     private static final String LINK_RANKING_HINT_KEY = "ranking_hint";
+    private static final String LINK_ANDROID_INTENT_KEY = "android_intent";
+
+    private static final String ANDROID_INTENT_FIELDS_KEY = "fields";
+    private static final String ANDROID_INTENT_EXTRAS_KEY = "extras";
+
+    private static final String ANDROID_INTENT_FIELDS_ACTION_KEY = "intent:android:action";
+    private static final String ANDROID_INTENT_FIELDS_PACKAGE_KEY = "intent:android:targetPackage";
+    private static final String ANDROID_INTENT_FIELDS_CLASS_KEY = "intent:android:targetClass";
+    private static final String ANDROID_INTENT_FIELDS_DATA_KEY = "intent:android:data";
 
     private String entity_id;
     private String name;
@@ -46,6 +60,7 @@ public class BranchLinkResult implements Parcelable {
     private String web_link;
     private String destination_store_id;
     private String click_tracking_url;
+    private Intent android_intent;
 
     private BranchLinkResult() {
     }
@@ -159,15 +174,20 @@ public class BranchLinkResult implements Parcelable {
     public BranchSearchError openContent(Context context, boolean fallbackToPlayStore) {
         registerClickEvent();
 
-        // 1. Try to open the app directly with URI Scheme
-        boolean success = openAppWithUriScheme(context);
+        // 1. Try to open the app with an Android Intent
+        boolean success = openAppWithAndroidIntent(context);
 
-        // 2. If URI Scheme is not working try opening with the web link in browser
+        // 2. Try to open the app directly with URI Scheme
+        if (!success) {
+            success = openAppWithUriScheme(context);
+        }
+
+        // 3. If URI Scheme is not working try opening with the web link in browser
         if (!success) {
             success = openAppWithWebLink(context);
         }
 
-        // 3. Fallback to the playstore
+        // 4. Fallback to the playstore
         if (!success && fallbackToPlayStore) {
             success = openAppWithPlayStore(context);
         }
@@ -177,6 +197,24 @@ public class BranchLinkResult implements Parcelable {
             err = new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
         }
         return err;
+    }
+
+    private boolean openAppWithAndroidIntent(@NonNull Context context) {
+        if (android_intent == null) return false;
+        ResolveInfo info = context.getPackageManager().resolveActivity(android_intent, 0);
+        if (info == null) {
+            // Something in this android_intent is wrong. It might be the package name, the
+            // target class name (if present), the intent action. There's nothing we can do.
+            return false;
+        }
+        if (android_intent.getComponent() == null) {
+            // No target class in server payload. Since we have already resolved one, let's add it.
+            android_intent.setClassName(
+                    info.activityInfo.packageName,
+                    info.activityInfo.name);
+        }
+        context.startActivity(android_intent);
+        return true;
     }
 
     private boolean openAppWithUriScheme(Context context) {
@@ -254,6 +292,55 @@ public class BranchLinkResult implements Parcelable {
 
         link.click_tracking_url = Util.optString(actionJson, LINK_TRACKING_KEY);
 
+        JSONObject androidIntent = actionJson.optJSONObject(LINK_ANDROID_INTENT_KEY);
+        if (androidIntent != null) {
+            JSONObject fields = androidIntent.optJSONObject(ANDROID_INTENT_FIELDS_KEY);
+            if (fields == null) throw new RuntimeException("Unexpected android_intent data (no fields)");
+
+            String action = Util.optString(fields, ANDROID_INTENT_FIELDS_ACTION_KEY);
+            link.android_intent = new Intent();
+            link.android_intent.setAction(action);
+            link.android_intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            String data = Util.optString(fields, ANDROID_INTENT_FIELDS_DATA_KEY);
+            if (!TextUtils.isEmpty(data)) {
+                link.android_intent.setData(Uri.parse(data));
+            }
+
+            String packageName = Util.optString(fields, ANDROID_INTENT_FIELDS_PACKAGE_KEY);
+            if (TextUtils.isEmpty(packageName)) packageName = appStoreId;
+            String className = Util.optString(fields, ANDROID_INTENT_FIELDS_CLASS_KEY);
+            if (!TextUtils.isEmpty(className)) {
+                link.android_intent.setClassName(packageName, className);
+
+            } else {
+                link.android_intent.setPackage(packageName);
+            }
+
+            JSONObject extras = androidIntent.optJSONObject(ANDROID_INTENT_EXTRAS_KEY);
+            if (extras != null) {
+                while (extras.keys().hasNext()) {
+                    String key = extras.keys().next();
+                    String value = Util.optString(extras, key);
+                    link.android_intent.putExtra(key, value);
+                }
+            }
+
+            // TODO (1) "shortcut:android:enabled"     - is this important?
+            // TODO (2) "shortcut:android:icon"        - should we try to read this?
+            //  It means we should access target app resources, then create a content:// uri provider,
+            //  then provide the local uri in getImageUrl()... Not sure if possible. Would also be a breaking
+            //  change for people that expect getImageUrl() to be an http(s):// uri.
+            //  To read it we'd also need a Context - see (4).
+            // TODO (3) "shortcut:android:label"       - will this be added?
+            //  If so, we should probably read the string and replace the name of the BranchLinkResult.
+            //  To read it we'd also need a Context - see (4).
+            // TODO (4) do we need to filter out results that are not working here at parsing time,
+            //  instead of click time? We'd need a PackageManager here, which means needing a Context,
+            //  which means saving a static reference of it in BranchConfiguration. A breaking change
+            //  for users and an important design change for the SDK.
+        }
+
         return link;
     }
 
@@ -281,10 +368,11 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.web_link);
         dest.writeString(this.destination_store_id);
         dest.writeString(this.click_tracking_url);
+        dest.writeParcelable(this.android_intent, 0);
     }
 
 
-    private BranchLinkResult(Parcel in) {
+    private BranchLinkResult(@NonNull Parcel in, @NonNull ClassLoader loader) {
         this.entity_id = in.readString();
         this.type = in.readString();
         this.score = in.readFloat();
@@ -306,12 +394,18 @@ public class BranchLinkResult implements Parcelable {
         this.web_link = in.readString();
         this.destination_store_id = in.readString();
         this.click_tracking_url = in.readString();
+        this.android_intent = in.readParcelable(loader);
     }
 
-    public static final Creator<BranchLinkResult> CREATOR = new Creator<BranchLinkResult>() {
+    public static final Creator<BranchLinkResult> CREATOR = new ClassLoaderCreator<BranchLinkResult>() {
         @Override
         public BranchLinkResult createFromParcel(Parcel source) {
-            return new BranchLinkResult(source);
+            return createFromParcel(source, getClass().getClassLoader());
+        }
+
+        @Override
+        public BranchLinkResult createFromParcel(Parcel source, ClassLoader loader) {
+            return new BranchLinkResult(source, loader);
         }
 
         @Override
