@@ -24,6 +24,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 
 import io.branch.search.BranchAppResult;
+import io.branch.search.BranchImpressionTracker;
 import io.branch.search.BranchLinkResult;
 import io.branch.search.demo.R;
 
@@ -133,8 +134,7 @@ public class ContentItem extends LinearLayout implements View.OnClickListener, V
         contentItem_.setOnClickListener(this);
         contentItem_.setOnLongClickListener(this);
         headerItemTextView_.setVisibility(View.GONE);
-
-        new ImpressionHelper(this, contentResult);
+        BranchImpressionTracker.trackImpressions(contentResult, this);
     }
 
     public void showAppHeader(BranchAppResult appResult) {
