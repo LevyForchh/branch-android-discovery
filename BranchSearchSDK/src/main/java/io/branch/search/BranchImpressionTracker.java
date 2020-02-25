@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 // TODO make package-private and access through BranchSearch
+// TODO make impressions unique wrt entityID+requestID, otherwise we get duplicates
+//  while scrolling or coming back from other apps. Anytime there's a new binding
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class BranchImpressionTracker {
 
@@ -94,7 +96,7 @@ public class BranchImpressionTracker {
         if (!mAttached) {
             // Now the ViewTreeObserver is the real one.
             // Add our callbacks.
-            mView.getViewTreeObserver().addOnPreDrawListener(mOnPreDraw);
+            // TODO testing without this -> mView.getViewTreeObserver().addOnPreDrawListener(mOnPreDraw);
             mView.getViewTreeObserver().addOnScrollChangedListener(mOnScrollChanged);
             mView.getViewTreeObserver().addOnGlobalLayoutListener(mOnLayout);
             mAttached = true;
@@ -104,7 +106,7 @@ public class BranchImpressionTracker {
     private void onViewDetached() {
         if (mAttached) {
             // Tear down.
-            mView.getViewTreeObserver().removeOnPreDrawListener(mOnPreDraw);
+            // TODO testing without this -> mView.getViewTreeObserver().removeOnPreDrawListener(mOnPreDraw);
             mView.getViewTreeObserver().removeOnScrollChangedListener(mOnScrollChanged);
             mView.getViewTreeObserver().removeOnGlobalLayoutListener(mOnLayout);
             mAttached = false;
