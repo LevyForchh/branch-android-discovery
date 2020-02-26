@@ -1,5 +1,7 @@
 package io.branch.search;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -9,6 +11,7 @@ import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -22,6 +25,9 @@ public class BranchImpressionTracker {
 
     // Do not check if we have already checked < CHECK_TIME_MILLIS ago.
     private static final long CHECK_TIME_MILLIS = 80;
+
+    // Do not count as impression if the visible area is less than 50% of the full view area.
+    private static final float AREA_MIN_FRACTION = 0.5F;
 
     private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
     private static Set<String> sImpressionIds = new HashSet<>();
@@ -106,23 +112,40 @@ public class BranchImpressionTracker {
         if (!mHasImpression
                 && mResult != null
                 && mView.isShown()
+                && ViewCompat.isLaidOut(mView)
                 && now > mLastCheckMillis + CHECK_TIME_MILLIS) {
             mLastCheckMillis = now;
 
-            // TODO: review this logic?
-            //  I don't think it's correct because the first rect is in window coordinates
-            //  while the other is in display coordinates.
-            // TODO: add a buffer because if only 1% of the entity is visible then it's not an impression
-
-            mView.getGlobalVisibleRect(mRect1);
+            // mRect1: Coordinates of the visible part of the view, in WINDOW coordinates.
+            // mRect2: Coordinates of the visible part of the window, in DISPLAY coordinates.
+            if (!mView.getGlobalVisibleRect(mRect1)) return;
             mView.getWindowVisibleDisplayFrame(mRect2);
-            boolean impression = mRect1.intersect(mRect2);
-            if (impression) {
-                mHasImpression = true;
-                sImpressionIds.add(getImpressionId(mResult));
-                Log.w("Tracker", "Got impression for [" + mResult.getName() + "]");
-            } else {
-                Log.i("Tracker", "No impression for [" + mResult.getName() + "]");
+
+            // There can be a big difference between the two coordinate systems, especially
+            // when in multi-window mode. We must offset one of the rects.
+            int windowLeft = mRect2.left;
+            int windowTop = mRect2.top;
+            mRect1.offset(windowLeft, windowTop);
+            Log.i("Tracker", "Checking impression for [" + mResult.getName() + "]"
+                    + " viewHeight:" + mView.getHeight()
+                    + ". windowHeight:" + mRect2.height() + " windowTop:" + windowTop
+                    + ". visibleViewHeight:" + mRect1.height() + " visibleViewTop:" + mRect1.top);
+
+            // Intersect the two. This is needed to take the keyboard into account.
+            boolean maybe = mRect1.intersect(mRect2);
+            if (maybe) {
+                float fullArea = (float) mView.getWidth() * mView.getHeight();
+                float visibleArea = (float) mRect1.width() * mRect1.height();
+                float percentage = visibleArea / fullArea;
+                if (percentage > AREA_MIN_FRACTION) {
+                    mHasImpression = true;
+                    sImpressionIds.add(getImpressionId(mResult));
+                    Log.e("Tracker", "Got impression for [" + mResult.getName() + "]");
+                } else {
+                    Log.w("Tracker", "Missed impression for [" + mResult.getName() + "]. Percentage: " + percentage
+                            + ". viewWidth:" + mView.getWidth() + " viewHeight:" + mView.getHeight()
+                            + ". visibleWidth:" + mRect1.width() + " visibleHeight:" + mRect1.height());
+                }
             }
         }
     }
