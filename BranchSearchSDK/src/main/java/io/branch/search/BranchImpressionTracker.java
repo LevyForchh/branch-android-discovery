@@ -3,12 +3,14 @@ package io.branch.search;
 import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -23,7 +25,7 @@ public class BranchImpressionTracker {
 
     private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
 
-    public static void trackImpressions(@NonNull BranchLinkResult result, @NonNull View view) {
+    public static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
         if (Build.VERSION.SDK_INT < 18) {
             throw new IllegalStateException("Impression tracking will only work on API 18+.");
         }
@@ -43,34 +45,13 @@ public class BranchImpressionTracker {
     private boolean mAttached = false;
     private boolean mHasImpression = false;
     private long mLastCheckMillis = 0L;
-
-    private final ViewTreeObserver.OnPreDrawListener mOnPreDraw
-            = new ViewTreeObserver.OnPreDrawListener() {
-        @Override
-        public boolean onPreDraw() {
-            checkImpression();
-            return true;
-        }
-    };
-
-    private final ViewTreeObserver.OnScrollChangedListener mOnScrollChanged
-            = new ViewTreeObserver.OnScrollChangedListener() {
-        @Override
-        public void onScrollChanged() {
-            checkImpression();
-        }
-    };
-
-    private final ViewTreeObserver.OnGlobalLayoutListener mOnLayout
-            = new ViewTreeObserver.OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-            checkImpression();
-        }
-    };
+    private final ViewTreeListener mListener = new ViewTreeListener(this);
 
     private BranchImpressionTracker(@NonNull View view) {
         mView = view;
+        // No one will remove this attach state listener, but we don't need to.
+        // This tracker is bound to the view and dies with it. No other tracker
+        // will be bound to this view instance.
         mView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewAttachedToWindow(View v) {
@@ -87,7 +68,7 @@ public class BranchImpressionTracker {
         }
     }
 
-    private void bindTo(@NonNull BranchLinkResult result) {
+    private void bindTo(@Nullable BranchLinkResult result) {
         mResult = result;
         mHasImpression = false;
     }
@@ -95,10 +76,8 @@ public class BranchImpressionTracker {
     private void onViewAttached() {
         if (!mAttached) {
             // Now the ViewTreeObserver is the real one.
-            // Add our callbacks.
-            // TODO testing without this -> mView.getViewTreeObserver().addOnPreDrawListener(mOnPreDraw);
-            mView.getViewTreeObserver().addOnScrollChangedListener(mOnScrollChanged);
-            mView.getViewTreeObserver().addOnGlobalLayoutListener(mOnLayout);
+            mView.getViewTreeObserver().addOnScrollChangedListener(mListener);
+            mView.getViewTreeObserver().addOnGlobalLayoutListener(mListener);
             mAttached = true;
         }
     }
@@ -106,9 +85,8 @@ public class BranchImpressionTracker {
     private void onViewDetached() {
         if (mAttached) {
             // Tear down.
-            // TODO testing without this -> mView.getViewTreeObserver().removeOnPreDrawListener(mOnPreDraw);
-            mView.getViewTreeObserver().removeOnScrollChangedListener(mOnScrollChanged);
-            mView.getViewTreeObserver().removeOnGlobalLayoutListener(mOnLayout);
+            mView.getViewTreeObserver().removeOnScrollChangedListener(mListener);
+            mView.getViewTreeObserver().removeOnGlobalLayoutListener(mListener);
             mAttached = false;
         }
     }
@@ -138,6 +116,37 @@ public class BranchImpressionTracker {
             } else {
                 Log.i("Tracker", "No impression for [" + mResult.getName() + "]");
             }
+        }
+    }
+
+    /**
+     * The purpose of this static class is to be extra safe against leaks.
+     * This listener will be added to the global ViewTreeObserver which lives within the root view
+     * of the whole app (ViewRootImpl) that has a longer lifecycle than the View we're tracking.
+     *
+     * We address this by unregistering this listener when the child View is detached, which should
+     * cover ALL cases. However, to be extra safe, we also use this static class combined with
+     * a WeakReference to the main tracker.
+     */
+    private static class ViewTreeListener implements
+            ViewTreeObserver.OnScrollChangedListener,
+            ViewTreeObserver.OnGlobalLayoutListener {
+        private final WeakReference<BranchImpressionTracker> mTracker;
+
+        private ViewTreeListener(@NonNull BranchImpressionTracker tracker) {
+            mTracker = new WeakReference<>(tracker);
+        }
+
+        @Override
+        public void onScrollChanged() {
+            BranchImpressionTracker tracker = mTracker.get();
+            if (tracker != null) tracker.checkImpression();
+        }
+
+        @Override
+        public void onGlobalLayout() {
+            BranchImpressionTracker tracker = mTracker.get();
+            if (tracker != null) tracker.checkImpression();
         }
     }
 }

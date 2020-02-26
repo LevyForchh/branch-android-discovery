@@ -134,7 +134,7 @@ public class ContentItem extends LinearLayout implements View.OnClickListener, V
         contentItem_.setOnClickListener(this);
         contentItem_.setOnLongClickListener(this);
         headerItemTextView_.setVisibility(View.GONE);
-        BranchImpressionTracker.trackImpressions(contentResult, this);
+        BranchImpressionTracker.trackImpressions(this, contentResult);
     }
 
     public void showAppHeader(BranchAppResult appResult) {
