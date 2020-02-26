@@ -11,12 +11,12 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 
 import java.lang.ref.WeakReference;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 // TODO make package-private and access through BranchSearch
-// TODO make impressions unique wrt entityID+requestID, otherwise we get duplicates
-//  while scrolling or coming back from other apps. Anytime there's a new binding
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class BranchImpressionTracker {
 
@@ -24,20 +24,26 @@ public class BranchImpressionTracker {
     private static final long CHECK_TIME_MILLIS = 80;
 
     private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
+    private static Set<String> sImpressionIds = new HashSet<>();
 
     public static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
         if (Build.VERSION.SDK_INT < 18) {
             throw new IllegalStateException("Impression tracking will only work on API 18+.");
         }
+        BranchImpressionTracker tracker;
         if (sTrackers.containsKey(view)) {
-            BranchImpressionTracker tracker = sTrackers.get(view);
-            //noinspection ConstantConditions
-            tracker.bindTo(result);
+            tracker = sTrackers.get(view);
         } else {
-            BranchImpressionTracker tracker = new BranchImpressionTracker(view);
-            tracker.bindTo(result);
+            tracker = new BranchImpressionTracker(view);
             sTrackers.put(view, tracker);
         }
+        //noinspection ConstantConditions
+        tracker.bindTo(result);
+    }
+
+    @NonNull
+    private static String getImpressionId(@NonNull BranchLinkResult result) {
+        return result.getEntityID(); // TODO add request ID to avoid duplicates
     }
 
     private BranchLinkResult mResult = null;
@@ -70,7 +76,8 @@ public class BranchImpressionTracker {
 
     private void bindTo(@Nullable BranchLinkResult result) {
         mResult = result;
-        mHasImpression = false;
+        mHasImpression = result == null
+                || sImpressionIds.contains(getImpressionId(result));
     }
 
     private void onViewAttached() {
@@ -112,6 +119,7 @@ public class BranchImpressionTracker {
             boolean impression = mRect1.intersect(mRect2);
             if (impression) {
                 mHasImpression = true;
+                sImpressionIds.add(getImpressionId(mResult));
                 Log.w("Tracker", "Got impression for [" + mResult.getName() + "]");
             } else {
                 Log.i("Tracker", "No impression for [" + mResult.getName() + "]");
