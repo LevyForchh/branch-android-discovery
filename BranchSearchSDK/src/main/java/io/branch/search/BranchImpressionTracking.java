@@ -110,12 +110,14 @@ class BranchImpressionTracking {
         if (now > then + REPORT_TIME_MILLIS || impressions.size() >= REPORT_MAX_SIZE) {
             JSONObject payload;
             try {
-                payload = new JSONObject();
                 JSONArray array = new JSONArray();
                 for (String impression : impressions) {
                     array.put(new JSONObject(impression));
                 }
+                payload = new JSONObject();
                 payload.put("impressions", array);
+                BranchSearchInterface.fillPayload(payload,
+                        BranchSearch.getInstance().getBranchConfiguration());
             } catch (JSONException e) {
                 return;
             }

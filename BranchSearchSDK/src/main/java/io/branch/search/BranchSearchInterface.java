@@ -137,19 +137,25 @@ class BranchSearchInterface {
         });
     }
 
-    static JSONObject createPayload(BranchSearchRequest request, BranchConfiguration configuration) {
+    @NonNull
+    static JSONObject createPayload(@NonNull BranchSearchRequest request,
+                                    @NonNull BranchConfiguration configuration) {
         JSONObject jsonPayload = request.convertToJson();
-        BranchDeviceInfo.addDeviceInfo(jsonPayload);
-        configuration.addConfigurationInfo(jsonPayload);
-
-        return jsonPayload;
+        return fillPayload(jsonPayload, configuration);
     }
 
-    static JSONObject createPayload(BranchQueryHintRequest request, BranchConfiguration configuration) {
+    @NonNull
+    static JSONObject createPayload(@NonNull BranchQueryHintRequest request,
+                                    @NonNull BranchConfiguration configuration) {
         JSONObject jsonPayload = request.convertToJson();
-        BranchDeviceInfo.addDeviceInfo(jsonPayload);
-        configuration.addConfigurationInfo(jsonPayload);
+        return fillPayload(jsonPayload, configuration);
+    }
 
-        return jsonPayload;
+    @NonNull
+    static JSONObject fillPayload(@NonNull JSONObject payload,
+                                  @NonNull BranchConfiguration configuration) {
+        BranchDeviceInfo.addDeviceInfo(payload);
+        configuration.addConfigurationInfo(payload);
+        return payload;
     }
 }
