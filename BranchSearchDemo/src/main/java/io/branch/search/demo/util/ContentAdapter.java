@@ -11,6 +11,7 @@ import java.util.List;
 
 import io.branch.search.BranchAppResult;
 import io.branch.search.BranchLinkResult;
+import io.branch.search.BranchSearch;
 import io.branch.search.BranchSearchResult;
 
 
@@ -57,10 +58,12 @@ public class ContentAdapter extends BaseAdapter {
         if (result instanceof BranchLinkResult) {
             BranchLinkResult linkResult = (BranchLinkResult)result;
             ((ContentItem) convertView).showContent(query, linkResult);
+            BranchSearch.getInstance().trackImpressions(convertView, linkResult);
         } else {
             // Load app header
             BranchAppResult appResult = (BranchAppResult)result;
             ((ContentItem) convertView).showAppHeader(appResult);
+            BranchSearch.getInstance().trackImpressions(convertView, null);
         }
         return convertView;
     }

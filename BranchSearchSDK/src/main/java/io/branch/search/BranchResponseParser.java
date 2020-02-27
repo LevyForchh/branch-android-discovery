@@ -69,7 +69,8 @@ class BranchResponseParser {
                                     rawDeepLinks.optJSONObject(j),
                                     name,
                                     store_id,
-                                    icon_url);
+                                    icon_url,
+                                    requestID);
                             if (link != null) {
                                 deepLinks.add(link);
                             }
@@ -81,7 +82,8 @@ class BranchResponseParser {
                         link = BranchLinkResult.createFromJson(app_search_link,
                                 name,
                                 store_id,
-                                icon_url);
+                                icon_url,
+                                requestID);
                     }
 
                     BranchAppResult appResult = new BranchAppResult(store_id,

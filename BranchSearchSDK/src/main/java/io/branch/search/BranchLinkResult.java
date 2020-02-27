@@ -50,6 +50,7 @@ public class BranchLinkResult implements Parcelable {
     private String destination_store_id;
     private String click_tracking_url;
     private String android_shortcut_id;
+    private String request_id;
 
     private BranchLinkResult() {
     }
@@ -133,9 +134,19 @@ public class BranchLinkResult implements Parcelable {
      * To inspect the package, please see {@link #getDestinationPackageName()}.
      * @return id or null
      */
+    @SuppressWarnings("WeakerAccess")
     @Nullable
     public String getAndroidShortcutId() {
         return TextUtils.isEmpty(android_shortcut_id) ? null : android_shortcut_id;
+    }
+
+    /**
+     * Used by {@link BranchImpressionTracker} to remove duplicate impressions.
+     * @return the request id
+     */
+    @NonNull
+    String getRequestId() {
+        return request_id;
     }
 
     /**
@@ -273,7 +284,8 @@ public class BranchLinkResult implements Parcelable {
     static BranchLinkResult createFromJson(@NonNull JSONObject actionJson,
                                            @NonNull String appName,
                                            @NonNull String appStoreId,
-                                           @NonNull String appIconUrl) {
+                                           @NonNull String appIconUrl,
+                                           @NonNull String requestId) {
         BranchLinkResult link = new BranchLinkResult();
         link.entity_id = Util.optString(actionJson, LINK_ENTITY_ID_KEY);
         link.type = Util.optString(actionJson, LINK_TYPE_KEY);
@@ -295,6 +307,7 @@ public class BranchLinkResult implements Parcelable {
 
         link.click_tracking_url = Util.optString(actionJson, LINK_TRACKING_KEY);
         link.android_shortcut_id = Util.optString(actionJson, LINK_ANDROID_SHORTCUT_ID_KEY);
+        link.request_id = requestId;
 
         // Validate if needed.
         boolean hasShortcut = !TextUtils.isEmpty(link.android_shortcut_id);
@@ -335,6 +348,7 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.destination_store_id);
         dest.writeString(this.click_tracking_url);
         dest.writeString(this.android_shortcut_id);
+        dest.writeString(this.request_id);
     }
 
 
@@ -361,6 +375,7 @@ public class BranchLinkResult implements Parcelable {
         this.destination_store_id = in.readString();
         this.click_tracking_url = in.readString();
         this.android_shortcut_id = in.readString();
+        this.request_id = in.readString();
     }
 
     public static final Creator<BranchLinkResult> CREATOR = new Creator<BranchLinkResult>() {

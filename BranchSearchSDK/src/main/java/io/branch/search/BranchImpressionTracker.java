@@ -20,9 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-// TODO make package-private and access through BranchSearch
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class BranchImpressionTracker {
+class BranchImpressionTracker {
 
     // Do not check if we have already checked < CHECK_TIME_MILLIS ago.
     private static final long CHECK_TIME_MILLIS = 80;
@@ -33,7 +32,7 @@ public class BranchImpressionTracker {
     private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
     private static Set<String> sImpressionIds = new HashSet<>();
 
-    public static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
+    static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
         if (Build.VERSION.SDK_INT < 18) {
             throw new IllegalStateException("Impression tracking will only work on API 18+.");
         }
@@ -50,7 +49,7 @@ public class BranchImpressionTracker {
 
     @NonNull
     private static String getImpressionId(@NonNull BranchLinkResult result) {
-        return result.getEntityID(); // TODO add request ID to avoid duplicates
+        return result.getRequestId() + "+" + result.getEntityID();
     }
 
     private BranchLinkResult mResult = null;

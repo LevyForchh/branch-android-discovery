@@ -4,9 +4,13 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 
@@ -100,6 +104,7 @@ public class BranchSearch {
      * @param callback {@link IBranchQueryResults} Callback to receive results.
      * @return true if the request was posted.
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean queryHint(final IBranchQueryResults callback) {
         return BranchSearchInterface.QueryHint(new BranchQueryHintRequest(), branchConfiguration, callback);
     }
@@ -111,8 +116,29 @@ public class BranchSearch {
      * @param callback {@link IBranchQueryResults} Callback to receive results.
      * @return true if the request was posted.
      */
+    @SuppressWarnings("UnusedReturnValue")
     public boolean autoSuggest(BranchSearchRequest request, final IBranchQueryResults callback) {
         return BranchSearchInterface.AutoSuggest(request, branchConfiguration, callback);
+    }
+
+    /**
+     * Lets Branch track impressions on the given view. Should be called anytime the view is
+     * bound to a result. When the view is bound to a different (non-Branch) type of data,
+     * null can be passed so that Branch can stop tracking that view.
+     *
+     * This function should be called when binding data. For example, in the onBindViewHolder
+     * method of RecyclerView.Adapter, or, if using ListView, in the
+     * {@link android.widget.Adapter#getView(int, View, ViewGroup)} callback.
+     *
+     * Note: this functionality will only work on Android API 18+.
+     *
+     * @param view the View that will hold link data
+     * @param linkResult the link that will be bound to it, or null to stop tracking the view
+     */
+    public void trackImpressions(@NonNull View view, @Nullable BranchLinkResult linkResult) {
+        if (Build.VERSION.SDK_INT >= 18) {
+            BranchImpressionTracker.trackImpressions(view, linkResult);
+        }
     }
 
     // Package Private
