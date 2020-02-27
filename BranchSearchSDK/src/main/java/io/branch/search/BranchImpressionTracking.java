@@ -76,7 +76,8 @@ class BranchImpressionTracking {
                                  @NonNull BranchLinkResult result,
                                  float area) {
         // Record the ID so it's not saved twice.
-        sImpressionIds.add(getImpressionId(result));
+        boolean isNew = sImpressionIds.add(getImpressionId(result));
+        if (!isNew) return;
 
         synchronized (sSendLock) {
             // Record into shared preferences as a simple JSON string.
