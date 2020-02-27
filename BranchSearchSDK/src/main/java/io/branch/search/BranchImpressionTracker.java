@@ -10,6 +10,7 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewParent;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
@@ -104,8 +105,10 @@ public class BranchImpressionTracker {
         }
     }
 
-    private final Rect mRect1 = new Rect();
-    private final Rect mRect2 = new Rect();
+    private final Rect mTempRect1 = new Rect();
+    private final Rect mTempRect2 = new Rect();
+    private final int[] mTempArray1 = new int[2];
+    private final int[] mTempArray2 = new int[2];
 
     private void checkImpression() {
         long now = System.currentTimeMillis();
@@ -118,33 +121,35 @@ public class BranchImpressionTracker {
 
             // mRect1: Coordinates of the visible part of the view, in WINDOW coordinates.
             // mRect2: Coordinates of the visible part of the window, in DISPLAY coordinates.
-            if (!mView.getGlobalVisibleRect(mRect1)) return;
-            mView.getWindowVisibleDisplayFrame(mRect2);
+            if (!mView.getGlobalVisibleRect(mTempRect1)) return;
+            mView.getWindowVisibleDisplayFrame(mTempRect2);
 
-            // There can be a big difference between the two coordinate systems, especially
-            // when in multi-window mode. We must offset one of the rects.
-            int windowLeft = mRect2.left;
-            int windowTop = mRect2.top;
-            mRect1.offset(windowLeft, windowTop);
-            Log.i("Tracker", "Checking impression for [" + mResult.getName() + "]"
-                    + " viewHeight:" + mView.getHeight()
-                    + ". windowHeight:" + mRect2.height() + " windowTop:" + windowTop
-                    + ". visibleViewHeight:" + mRect1.height() + " visibleViewTop:" + mRect1.top);
+            // There can be a big difference between the two coordinate systems, for example
+            // when in multi-window mode. So before comparing the two rects, we must offset
+            // the view rect by window left and top. To get these, we need to use a trick:
+            mView.getLocationInWindow(mTempArray1);
+            mView.getLocationOnScreen(mTempArray2);
+            int windowLeft = mTempArray2[0] - mTempArray1[0];
+            int windowTop = mTempArray2[1] - mTempArray1[1];
+            mTempRect1.offset(windowLeft, windowTop);
+            /* Log.i("Tracker", "Checking impression for [" + mResult.getName() + "]"
+                    + " viewHeight:" + mView.getHeight() + " viewVisibleHeight:" + mTempRect1.height() + " viewVisibleTop:" + mTempRect1.top
+                    + " windowVisibleHeight:" + mTempRect2.height() + " windowVisibleTop:" + mTempRect2.top + " windowTop:" + windowTop); */
 
             // Intersect the two. This is needed to take the keyboard into account.
-            boolean maybe = mRect1.intersect(mRect2);
+            boolean maybe = mTempRect1.intersect(mTempRect2);
             if (maybe) {
                 float fullArea = (float) mView.getWidth() * mView.getHeight();
-                float visibleArea = (float) mRect1.width() * mRect1.height();
+                float visibleArea = (float) mTempRect1.width() * mTempRect1.height();
                 float percentage = visibleArea / fullArea;
                 if (percentage > AREA_MIN_FRACTION) {
                     mHasImpression = true;
                     sImpressionIds.add(getImpressionId(mResult));
-                    Log.e("Tracker", "Got impression for [" + mResult.getName() + "]");
+                    /* Log.e("Tracker", "Got impression for [" + mResult.getName() + "]"); */
                 } else {
-                    Log.w("Tracker", "Missed impression for [" + mResult.getName() + "]. Percentage: " + percentage
+                    /* Log.w("Tracker", "Missed impression for [" + mResult.getName() + "]. Percentage: " + percentage
                             + ". viewWidth:" + mView.getWidth() + " viewHeight:" + mView.getHeight()
-                            + ". visibleWidth:" + mRect1.width() + " visibleHeight:" + mRect1.height());
+                            + ". visibleWidth:" + mTempRect1.width() + " visibleHeight:" + mTempRect1.height()); */
                 }
             }
         }
