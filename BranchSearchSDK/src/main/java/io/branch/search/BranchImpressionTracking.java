@@ -40,11 +40,12 @@ class BranchImpressionTracking {
     // The SharedPreferences slot where we write the last successful upload time.
     private static final String RECORD_KEY_TIME = "branchImpressionsTime";
 
-    private static URLConnectionNetworkHandler sReportHandler = URLConnectionNetworkHandler.initialize();
     private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
     private static Set<String> sImpressionIds = new HashSet<>();
+
+    private static URLConnectionNetworkHandler sSender = URLConnectionNetworkHandler.initialize();
     private static boolean sIsSending = false;
-    private static final Object sIsSendingLock = new Object();
+    private static final Object sSendLock = new Object();
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
@@ -77,7 +78,7 @@ class BranchImpressionTracking {
         // Record the ID so it's not saved twice.
         sImpressionIds.add(getImpressionId(result));
 
-        synchronized (sIsSendingLock) {
+        synchronized (sSendLock) {
             // Record into shared preferences as a simple JSON string.
             String impression;
             try {
@@ -96,15 +97,14 @@ class BranchImpressionTracking {
             preferences.edit().putStringSet(RECORD_KEY, set).apply();
 
             // Maybe send to server.
-            if (!sIsSending) {
-                maybeSendImpressions(preferences, set);
-            }
+            maybeSendImpressions(preferences, set);
         }
     }
 
-    // This is already synchronized on sSendingLock.
+    // This method is already synchronized on our lock.
     private static void maybeSendImpressions(@NonNull final SharedPreferences preferences,
                                              @NonNull final Set<String> impressions) {
+        if (sIsSending) return;
         final long now = System.currentTimeMillis();
         final long then = preferences.getLong(RECORD_KEY_TIME, 0L);
         if (now > then + REPORT_TIME_MILLIS || impressions.size() >= REPORT_MAX_SIZE) {
@@ -122,11 +122,13 @@ class BranchImpressionTracking {
 
             // We're ready to upload.
             sIsSending = true;
-            sReportHandler.executePost(REPORT_URL, payload, new IURLConnectionEvents() {
+            sSender.executePost(REPORT_URL, payload, new IURLConnectionEvents() {
                 @Override
                 public void onResult(@NonNull JSONObject response) {
+                    // This callback is called on a background thread, so we need a lock
+                    // to synchronize access.
                     boolean success = !(response instanceof BranchSearchError);
-                    synchronized (sIsSendingLock) {
+                    synchronized (sSendLock) {
                         sIsSending = false;
                         if (success) {
                             // Remove the sent values from preferences so we don't send twice.
