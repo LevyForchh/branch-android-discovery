@@ -1,25 +1,20 @@
 package io.branch.search;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.Rect;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewParent;
 import android.view.ViewTreeObserver;
-import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.WeakHashMap;
 
+/**
+ * This class is responsible for checking {@link BranchLinkResult} impressions on Views.
+ * See {@link BranchImpressionTracking}.
+ */
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 class BranchImpressionTracker {
 
@@ -27,30 +22,7 @@ class BranchImpressionTracker {
     private static final long CHECK_TIME_MILLIS = 80;
 
     // Do not count as impression if the visible area is less than 50% of the full view area.
-    private static final float AREA_MIN_FRACTION = 0.5F;
-
-    private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
-    private static Set<String> sImpressionIds = new HashSet<>();
-
-    static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
-        if (Build.VERSION.SDK_INT < 18) {
-            throw new IllegalStateException("Impression tracking will only work on API 18+.");
-        }
-        BranchImpressionTracker tracker;
-        if (sTrackers.containsKey(view)) {
-            tracker = sTrackers.get(view);
-        } else {
-            tracker = new BranchImpressionTracker(view);
-            sTrackers.put(view, tracker);
-        }
-        //noinspection ConstantConditions
-        tracker.bindTo(result);
-    }
-
-    @NonNull
-    private static String getImpressionId(@NonNull BranchLinkResult result) {
-        return result.getRequestId() + "+" + result.getEntityID();
-    }
+    private static final float CHECK_AREA_MIN_FRACTION = 0.5F;
 
     private BranchLinkResult mResult = null;
     private final View mView;
@@ -59,7 +31,7 @@ class BranchImpressionTracker {
     private long mLastCheckMillis = 0L;
     private final ViewTreeListener mListener = new ViewTreeListener(this);
 
-    private BranchImpressionTracker(@NonNull View view) {
+    BranchImpressionTracker(@NonNull View view) {
         mView = view;
         // No one will remove this attach state listener, but we don't need to.
         // This tracker is bound to the view and dies with it. No other tracker
@@ -80,10 +52,10 @@ class BranchImpressionTracker {
         }
     }
 
-    private void bindTo(@Nullable BranchLinkResult result) {
+    void bindTo(@Nullable BranchLinkResult result) {
         mResult = result;
         mHasImpression = result == null
-                || sImpressionIds.contains(getImpressionId(result));
+                || BranchImpressionTracking.hasTrackedImpression(result);
     }
 
     private void onViewAttached() {
@@ -141,9 +113,9 @@ class BranchImpressionTracker {
                 float fullArea = (float) mView.getWidth() * mView.getHeight();
                 float visibleArea = (float) mTempRect1.width() * mTempRect1.height();
                 float percentage = visibleArea / fullArea;
-                if (percentage > AREA_MIN_FRACTION) {
+                if (percentage > CHECK_AREA_MIN_FRACTION) {
                     mHasImpression = true;
-                    sImpressionIds.add(getImpressionId(mResult));
+                    BranchImpressionTracking.recordImpression(mView.getContext(), mResult, percentage);
                     /* Log.e("Tracker", "Got impression for [" + mResult.getName() + "]"); */
                 } else {
                     /* Log.w("Tracker", "Missed impression for [" + mResult.getName() + "]. Percentage: " + percentage

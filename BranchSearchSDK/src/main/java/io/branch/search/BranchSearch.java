@@ -137,7 +137,7 @@ public class BranchSearch {
      */
     public void trackImpressions(@NonNull View view, @Nullable BranchLinkResult linkResult) {
         if (Build.VERSION.SDK_INT >= 18) {
-            BranchImpressionTracker.trackImpressions(view, linkResult);
+            BranchImpressionTracking.trackImpressions(view, linkResult);
         }
     }
 

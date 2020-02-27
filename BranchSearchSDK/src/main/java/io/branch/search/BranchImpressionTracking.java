@@ -1,0 +1,149 @@
+package io.branch.search;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Build;
+import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+import android.view.View;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+
+
+/**
+ * Coordinates impression tracking, including managing {@link BranchImpressionTracker}s,
+ * batching results and uploading them to server.
+ */
+class BranchImpressionTracking {
+
+    // Send impressions to server every day.
+    private static final long REPORT_TIME_MILLIS = 1000L * 60 * 60 * 24;
+
+    // But also send whenever we have more than 100 pending impressions.
+    private static final int REPORT_MAX_SIZE = 100;
+
+    // TODO the report URL
+    private static final String REPORT_URL = "https://fakeUrl.fakeUrl";
+
+    // The SharedPreferences slot where we write impressions to be uploaded.
+    private static final String RECORD_KEY = "branchImpressions";
+
+    // The SharedPreferences slot where we write the last successful upload time.
+    private static final String RECORD_KEY_TIME = "branchImpressionsTime";
+
+    private static URLConnectionNetworkHandler sReportHandler = URLConnectionNetworkHandler.initialize();
+    private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
+    private static Set<String> sImpressionIds = new HashSet<>();
+    private static boolean sIsSending = false;
+    private static final Object sIsSendingLock = new Object();
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    static void trackImpressions(@NonNull View view, @Nullable BranchLinkResult result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            throw new IllegalStateException("Impression tracking will only work on API 18+.");
+        }
+        BranchImpressionTracker tracker;
+        if (sTrackers.containsKey(view)) {
+            tracker = sTrackers.get(view);
+        } else {
+            tracker = new BranchImpressionTracker(view);
+            sTrackers.put(view, tracker);
+        }
+        //noinspection ConstantConditions
+        tracker.bindTo(result);
+    }
+
+    static boolean hasTrackedImpression(@NonNull BranchLinkResult result) {
+        return sImpressionIds.contains(getImpressionId(result));
+    }
+
+    @NonNull
+    private static String getImpressionId(@NonNull BranchLinkResult result) {
+        return result.getRequestId() + "+" + result.getEntityID();
+    }
+
+    static void recordImpression(@NonNull Context context,
+                                 @NonNull BranchLinkResult result,
+                                 float area) {
+        // Record the ID so it's not saved twice.
+        sImpressionIds.add(getImpressionId(result));
+
+        synchronized (sIsSendingLock) {
+            // Record into shared preferences as a simple JSON string.
+            String impression;
+            try {
+                JSONObject object = new JSONObject();
+                object.put("entity", result.getEntityID());
+                object.put("area", area);
+                object.put("timestamp", System.currentTimeMillis());
+                impression = object.toString();
+            } catch (JSONException e) {
+                return;
+            }
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+            Set<String> set = preferences.getStringSet(RECORD_KEY, null);
+            if (set == null) set = new HashSet<>();
+            set.add(impression);
+            preferences.edit().putStringSet(RECORD_KEY, set).apply();
+
+            // Maybe send to server.
+            if (!sIsSending) {
+                maybeSendImpressions(preferences, set);
+            }
+        }
+    }
+
+    // This is already synchronized on sSendingLock.
+    private static void maybeSendImpressions(@NonNull final SharedPreferences preferences,
+                                             @NonNull final Set<String> impressions) {
+        final long now = System.currentTimeMillis();
+        final long then = preferences.getLong(RECORD_KEY_TIME, 0L);
+        if (now > then + REPORT_TIME_MILLIS || impressions.size() >= REPORT_MAX_SIZE) {
+            JSONObject payload;
+            try {
+                payload = new JSONObject();
+                JSONArray array = new JSONArray();
+                for (String impression : impressions) {
+                    array.put(new JSONObject(impression));
+                }
+                payload.put("impressions", array);
+            } catch (JSONException e) {
+                return;
+            }
+
+            // We're ready to upload.
+            sIsSending = true;
+            sReportHandler.executePost(REPORT_URL, payload, new IURLConnectionEvents() {
+                @Override
+                public void onResult(@NonNull JSONObject response) {
+                    boolean success = !(response instanceof BranchSearchError);
+                    synchronized (sIsSendingLock) {
+                        sIsSending = false;
+                        if (success) {
+                            // Remove the sent values from preferences so we don't send twice.
+                            Set<String> set = preferences.getStringSet(RECORD_KEY, null);
+                            if (set == null) set = new HashSet<>();
+                            set.removeAll(impressions);
+                            preferences.edit()
+                                    .putStringSet(RECORD_KEY, set)
+                                    .putLong(RECORD_KEY_TIME, now)
+                                    .apply();
+                        } else {
+                            // Nothing to do. The preference key already contains all impressions
+                            // (those we tried to send, and any other that came while sending).
+                        }
+                    }
+                }
+            });
+        }
+    }
+}
