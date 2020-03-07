@@ -4,10 +4,9 @@ import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
-import junit.framework.Assert;
-
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,22 +19,17 @@ import io.branch.search.util.AssetUtils;
  * SearchResult Tests.
  */
 @RunWith(AndroidJUnit4.class)
-public class BranchSearchResultTest {
-    private Context mContext;
+public class BranchSearchResultTest extends BranchTest {
 
     @Before
-    public void setUp() {
-        mContext = InstrumentationRegistry.getTargetContext();
-    }
-
-    @After
-    public void tearDown() {
-        mContext = null;
+    public void setUp() throws Throwable {
+        super.setUp();
+        initBranch();
     }
 
     @Test
     public void testResultSuccess() throws Throwable {
-        String response = AssetUtils.readJsonFile(mContext, "success_mex_food.json");
+        String response = AssetUtils.readJsonFile(getTestContext(), "success_mex_food.json");
         Assert.assertTrue(response.length() > 0);
 
         JSONObject jsonResponse = new JSONObject(response);
@@ -55,7 +49,7 @@ public class BranchSearchResultTest {
 
     @Test
     public void testResultSuccess_empty1() throws Throwable {
-        String response = AssetUtils.readJsonFile(mContext, "success_empty1.json");
+        String response = AssetUtils.readJsonFile(getTestContext(), "success_empty1.json");
         Assert.assertTrue(response.length() > 0);
 
         JSONObject jsonResponse = new JSONObject(response);
@@ -71,7 +65,7 @@ public class BranchSearchResultTest {
 
     @Test
     public void testResultSuccess_empty2() throws Throwable {
-        String response = AssetUtils.readJsonFile(mContext, "success_empty2.json");
+        String response = AssetUtils.readJsonFile(getTestContext(), "success_empty2.json");
         Assert.assertTrue(response.length() > 0);
 
         JSONObject jsonResponse = new JSONObject(response);
@@ -91,7 +85,7 @@ public class BranchSearchResultTest {
 
     @Test
     public void testResultSuccess_empty3() throws Throwable {
-        String response = AssetUtils.readJsonFile(mContext, "success_empty3.json");
+        String response = AssetUtils.readJsonFile(getTestContext(), "success_empty3.json");
         Assert.assertTrue(response.length() > 0);
 
         JSONObject jsonResponse = new JSONObject(response);
@@ -101,8 +95,9 @@ public class BranchSearchResultTest {
         Assert.assertNotNull(result);
 
         // This has One App Result, but nothing inside.
+        // This is not allowed anymore, so list should be empty.
         List<BranchAppResult> appResults = result.getResults();
-        Assert.assertEquals(1, appResults.size());
+        Assert.assertTrue(appResults.isEmpty());
     }
 
     @Test
@@ -115,7 +110,7 @@ public class BranchSearchResultTest {
 
     @Test
     public void testResultSuccess_null() throws Throwable {
-        String response = AssetUtils.readJsonFile(mContext, "success_null_everywhere.json");
+        String response = AssetUtils.readJsonFile(getTestContext(), "success_null_everywhere.json");
         Assert.assertTrue(response.length() > 0);
 
         JSONObject jsonResponse = new JSONObject(response);
@@ -124,18 +119,14 @@ public class BranchSearchResultTest {
         BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
         Assert.assertNotNull(result);
 
-        // Check to see if there is some expected information in the result.
+        // Since results have no app id, the "not installed" filter will remove them
         List<BranchAppResult> appResults = result.getResults();
-        Assert.assertTrue(appResults.size() > 0);
-
-        for (BranchAppResult appResult : appResults) {
-            testAppResult(appResult);
-        }
+        Assert.assertTrue(appResults.isEmpty());
     }
 
     @Test
     public void testResultError() throws Throwable {
-        String response = AssetUtils.readJsonFile(mContext, "err_region.json");
+        String response = AssetUtils.readJsonFile(getTestContext(), "err_region.json");
         Assert.assertTrue(response.length() > 0);
 
         JSONObject jsonObject = new JSONObject(response);

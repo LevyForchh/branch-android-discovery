@@ -46,7 +46,7 @@ public class BranchLinkResult implements Parcelable {
 
     private String routing_mode;
     private String uri_scheme;
-    private String web_link;
+    String web_link;
     private String destination_store_id;
     private String click_tracking_url;
     private String android_shortcut_id;
@@ -269,7 +269,7 @@ public class BranchLinkResult implements Parcelable {
     }
 
     @SuppressLint("NewApi")
-    @Nullable
+    @NonNull
     static BranchLinkResult createFromJson(@NonNull JSONObject actionJson,
                                            @NonNull String appName,
                                            @NonNull String appStoreId,
@@ -295,18 +295,6 @@ public class BranchLinkResult implements Parcelable {
 
         link.click_tracking_url = Util.optString(actionJson, LINK_TRACKING_KEY);
         link.android_shortcut_id = Util.optString(actionJson, LINK_ANDROID_SHORTCUT_ID_KEY);
-
-        // Validate if needed.
-        boolean hasShortcut = !TextUtils.isEmpty(link.android_shortcut_id);
-        if (hasShortcut) { // Need to validate
-            Context appContext = BranchSearch.getInstance().getApplicationContext();
-            IBranchShortcutHandler handler = BranchSearch.getInstance()
-                    .getBranchConfiguration()
-                    .getShortcutHandler();
-            if (!handler.validateShortcut(appContext, link.android_shortcut_id, appStoreId)) {
-                return null;
-            }
-        }
         return link;
     }
 

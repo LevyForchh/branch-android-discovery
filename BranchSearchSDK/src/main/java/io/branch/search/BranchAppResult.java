@@ -25,7 +25,7 @@ public class BranchAppResult implements Parcelable {
                     BranchLinkResult searchDeepLink,
                     @NonNull String rankingHint,
                     float score,
-                    ArrayList<BranchLinkResult> deep_links) {
+                    List<BranchLinkResult> deep_links) {
         this.app_store_id = appStoreID;
         this.app_name = appName;
         this.app_icon_url = appIconUrl;
