@@ -1,7 +1,6 @@
 package io.branch.search;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
@@ -32,7 +31,7 @@ class BranchResponseParser {
     private static final String APP_SCORE_KEY = "score";
     private static final String APP_DEEP_LINKS_KEY = "deep_links";
     private static final String RANKING_HINT_KEY = "ranking_hint";
-    private static final String MAX_RESULTS_KEY = "max_results";
+    private static final String UNINSTALLED_MAX_RESULTS_KEY = "uninstalled_max_results";
 
 
     static BranchSearchResult parse(BranchSearchRequest query, JSONObject object) {
@@ -115,7 +114,7 @@ class BranchResponseParser {
             // Apply the max results constraint
             // If nothing remains, this app should disappear
             if (!isInstalled) {
-                int maxResults = resultObj.optInt(MAX_RESULTS_KEY, Integer.MAX_VALUE);
+                int maxResults = resultObj.optInt(UNINSTALLED_MAX_RESULTS_KEY, Integer.MAX_VALUE);
                 int max = Math.min(maxResults, deepLinks.size());
                 deepLinks = deepLinks.subList(0, max);
             }
