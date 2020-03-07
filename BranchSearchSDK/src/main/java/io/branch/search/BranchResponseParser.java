@@ -67,7 +67,6 @@ class BranchResponseParser {
             String icon_url = Util.optString(resultObj, APP_ICON_URL_KEY);
             float score = (float)resultObj.optDouble(APP_SCORE_KEY, 0.0);
             String rankingHint = Util.optString(resultObj, RANKING_HINT_KEY);
-            int maxResults = resultObj.optInt(MAX_RESULTS_KEY, Integer.MAX_VALUE);
             Context appContext = BranchSearch.getInstance().getApplicationContext();
             boolean isInstalled = Util.isAppInstalled(appContext, store_id);
 
@@ -115,8 +114,11 @@ class BranchResponseParser {
 
             // Apply the max results constraint
             // If nothing remains, this app should disappear
-            int max = Math.min(maxResults, deepLinks.size());
-            deepLinks = deepLinks.subList(0, max);
+            if (!isInstalled) {
+                int maxResults = resultObj.optInt(MAX_RESULTS_KEY, Integer.MAX_VALUE);
+                int max = Math.min(maxResults, deepLinks.size());
+                deepLinks = deepLinks.subList(0, max);
+            }
             if (deepLinks.isEmpty()) {
                 continue;
             }
