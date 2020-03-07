@@ -74,26 +74,6 @@ public class BranchSearchResultTest extends BranchTest {
         BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
         Assert.assertNotNull(result);
 
-        // This has One App Result.
-        List<BranchAppResult> appResults = result.getResults();
-        Assert.assertEquals(1, appResults.size());
-
-        // However, there are no deep links
-        BranchAppResult appResult = appResults.get(0);
-        Assert.assertEquals(0, appResult.getDeepLinks().size());
-    }
-
-    @Test
-    public void testResultSuccess_empty3() throws Throwable {
-        String response = AssetUtils.readJsonFile(getTestContext(), "success_empty3.json");
-        Assert.assertTrue(response.length() > 0);
-
-        JSONObject jsonResponse = new JSONObject(response);
-
-        BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
-        BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
-        Assert.assertNotNull(result);
-
         // This has One App Result, but nothing inside.
         // This is not allowed anymore, so list should be empty.
         List<BranchAppResult> appResults = result.getResults();
@@ -101,7 +81,7 @@ public class BranchSearchResultTest extends BranchTest {
     }
 
     @Test
-    public void testResultSuccess_empty4() {
+    public void testResultSuccess_empty3() {
         // Parse with an empty JSONObject
         BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
         BranchSearchResult result = BranchResponseParser.parse(request, new JSONObject());

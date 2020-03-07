@@ -16,20 +16,17 @@ public class BranchAppResult implements Parcelable {
     private final String app_store_id;
     private final String app_name;
     private final String app_icon_url;
-    private final BranchLinkResult app_search_deep_link;
     private String ranking_hint;
     private final float score;
     private final List<BranchLinkResult> deep_links;
 
     BranchAppResult(String appStoreID, String appName, String appIconUrl,
-                    BranchLinkResult searchDeepLink,
                     @NonNull String rankingHint,
                     float score,
                     List<BranchLinkResult> deep_links) {
         this.app_store_id = appStoreID;
         this.app_name = appName;
         this.app_icon_url = appIconUrl;
-        this.app_search_deep_link = searchDeepLink;
         this.ranking_hint = rankingHint;
         this.deep_links = deep_links;
         this.score = score;
@@ -96,7 +93,6 @@ public class BranchAppResult implements Parcelable {
         dest.writeString(this.app_store_id);
         dest.writeString(this.app_name);
         dest.writeString(this.app_icon_url);
-        dest.writeValue(this.app_search_deep_link);
         dest.writeString(this.ranking_hint);
         dest.writeFloat(this.score);
         dest.writeTypedList(this.deep_links);
@@ -106,7 +102,6 @@ public class BranchAppResult implements Parcelable {
         this.app_store_id = in.readString();
         this.app_name = in.readString();
         this.app_icon_url = in.readString();
-        this.app_search_deep_link = (BranchLinkResult) in.readValue(BranchLinkResult.class.getClassLoader());
         this.ranking_hint = in.readString();
         this.score = in.readFloat();
         this.deep_links = in.createTypedArrayList(BranchLinkResult.CREATOR);
@@ -143,11 +138,9 @@ public class BranchAppResult implements Parcelable {
      * @param context             Application context
      * @param fallbackToPlayStore If set to {@code true} fallbacks to the Google play if the app is not installed and there is no valid web url.
      * @return BranchSearchError {@link BranchSearchError} object to pass any error with complete action. Null if succeeded.
+     * @deprecated the search deep link, if available, will be among other link results for this app
      */
     public BranchSearchError openSearchDeepLink(Context context, boolean fallbackToPlayStore) {
-        if (app_search_deep_link != null) {
-            return app_search_deep_link.openContent(context, fallbackToPlayStore);
-        }
         return openApp(context, fallbackToPlayStore);
     }
 
@@ -156,9 +149,11 @@ public class BranchAppResult implements Parcelable {
      * open to the home page when "openSearchDeepLink" is called.
      *
      * @return boolean  True if the search deep link is available. False if not.
+     * @deprecated the search deep link, if available, will be among other link results for this app
      */
+    @Deprecated
     public boolean isSearchDeepLinkAvailable() {
-        return app_search_deep_link != null;
+        return false;
     }
 }
 

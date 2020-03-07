@@ -29,7 +29,6 @@ class BranchResponseParser {
     private static final String APP_NAME_KEY = "app_name";
     private static final String APP_STORE_ID_KEY = "app_store_id";
     private static final String APP_ICON_URL_KEY = "app_icon_url";
-    private static final String APP_SEARCH_DEEP_LINK_KEY = "app_search_deep_link";
     private static final String APP_SCORE_KEY = "score";
     private static final String APP_DEEP_LINKS_KEY = "deep_links";
     private static final String RANKING_HINT_KEY = "ranking_hint";
@@ -122,21 +121,10 @@ class BranchResponseParser {
                 continue;
             }
 
-            // Parse APP_SEARCH_DEEP_LINK_KEY
-            BranchLinkResult link = null;
-            JSONObject app_search_link = resultObj.optJSONObject(APP_SEARCH_DEEP_LINK_KEY);
-            if (app_search_link != null) {
-                link = BranchLinkResult.createFromJson(app_search_link,
-                        name,
-                        store_id,
-                        icon_url);
-            }
-
             // Create BranchAppResult and return
             BranchAppResult appResult = new BranchAppResult(store_id,
                     name,
                     icon_url,
-                    link,
                     rankingHint,
                     score,
                     deepLinks);
