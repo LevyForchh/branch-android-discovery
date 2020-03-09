@@ -3,6 +3,7 @@ package io.branch.search;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -132,6 +133,16 @@ class Util {
             }
         }
         return tryOpenApp;
+    }
+
+    static boolean isAppInstalled(@NonNull Context context, @NonNull String packageName) {
+        PackageManager manager = context.getPackageManager();
+        try {
+            manager.getPackageInfo(packageName, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
     }
 
     /**

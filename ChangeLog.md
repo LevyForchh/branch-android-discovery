@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v1.5.4
+  * _*Master Release*_ - March 9, 2020
+  * Bug fixes
+
 - v1.5.3
   * _*Master Release*_ - March 2, 2020
   * Improved detection of GAID and device information
