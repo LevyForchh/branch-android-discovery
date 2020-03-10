@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -42,6 +43,8 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     private List<String> queryHints;
     private static final int LOCATION_PERMISSION_REQ_CODE = 2001;
 
+//    LauncherApps launcherApps;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +53,9 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
         bfSearchBox.setKeywordChangeListener(this);
         branchSearchController = findViewById(R.id.recommendation_layout);
         imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+//        }
 
         // Initialize the Branch Search SDK
         BranchSearch searchSDK = BranchSearch.init(getApplicationContext());
@@ -228,4 +234,68 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
         }
     }
 
+    @Override public void onBackPressed() {
+        getDynamicShortcutIds();
+    }
+
+    public static final int LAUNCH_SHORTCUT = 112;// The request code.
+    public static final int GET_DYNAMIC_SHORTCUT_IDS = 111;// The request code.
+    private void getDynamicShortcutIds() {
+        Intent benasIntent = new Intent("benas", Uri.parse("benas_launcher://get_shortcuts"));
+        startActivityForResult(benasIntent, GET_DYNAMIC_SHORTCUT_IDS);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == GET_DYNAMIC_SHORTCUT_IDS) {
+                launchDynamicShortcut(data);
+            } else if (requestCode == LAUNCH_SHORTCUT) {
+                Log.i("benas", "requestCode = LAUNCH_SHORTCUT ");
+            } else {
+                Log.i("benas", "requestCode = " + requestCode);
+            }
+        } else {
+            Log.i("benas", "resultCode = " + resultCode);
+        }
+    }
+
+    private void launchDynamicShortcut(Intent data) {
+        String benasShortcut = null;
+        String benasPackageName = null;
+
+        if (data == null || data.getExtras() == null) {
+            Log.i("benas", "data = " + data + ", extras = " + (data == null ? "null" : data.getExtras()));
+            return;
+        }
+
+        for (String key : data.getExtras().keySet()) {
+            String[] extraArray = data.getExtras().getStringArray(key);
+            if (extraArray == null) continue;
+
+            for (String shortcutId : extraArray) {
+                if (benasShortcut == null && shortcutId.contains("benas")) {
+                    benasShortcut = shortcutId;
+                    benasPackageName = key;
+                }
+                Log.i("benas", "package  = " + key + ", shortcut id = " + shortcutId);
+            }
+        }
+
+        if (benasPackageName != null && benasShortcut != null) {
+            launchShortcutViaLauncher(benasPackageName, benasShortcut);
+        }
+
+//        if (launcherApps != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1 &&
+//                benasPackageName != null && benasShortcut != null) {
+//            launcherApps.startShortcut(benasPackageName, benasShortcut, null, null, Process.myUserHandle());
+//        }
+    }
+
+    private void launchShortcutViaLauncher(String benasPackageName, String benasShortcut) {
+        Intent benasIntent = new Intent("benas", Uri.parse("benas_launcher://launch"));
+        benasIntent.putExtra("package_name", benasPackageName);
+        benasIntent.putExtra("shortcut_id", benasShortcut);
+        startActivityForResult(benasIntent, LAUNCH_SHORTCUT);
+    }
 }
