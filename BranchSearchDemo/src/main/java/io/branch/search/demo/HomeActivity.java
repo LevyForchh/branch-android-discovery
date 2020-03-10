@@ -242,6 +242,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     public static final int GET_DYNAMIC_SHORTCUT_IDS = 111;// The request code.
     private void getDynamicShortcutIds() {
         Intent benasIntent = new Intent("benas", Uri.parse("benas_launcher://get_shortcuts"));
+        benasIntent.putExtra("shortcut_type", GET_DYNAMIC_SHORTCUT_IDS);
         startActivityForResult(benasIntent, GET_DYNAMIC_SHORTCUT_IDS);
     }
 
