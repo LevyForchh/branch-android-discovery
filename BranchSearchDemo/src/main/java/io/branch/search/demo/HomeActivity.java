@@ -277,7 +277,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
             if (extraArray == null) continue;
 
             for (String shortcutId : extraArray) {
-                if (benasShortcut == null && shortcutId.contains("benas")) {
+                if (benasShortcut == null && shortcutId.contains("dynamic-new-incognito-tab-shortcut")) {
                     benasShortcut = shortcutId;
                     benasPackageName = key;
                 }
