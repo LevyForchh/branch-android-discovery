@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v1.5.5
+  * _*Master Release*_ - March 11, 2020
+  * Bug fixes
+
 - v1.5.4
   * _*Master Release*_ - March 9, 2020
   * Bug fixes
