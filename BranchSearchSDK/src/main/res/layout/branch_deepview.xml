@@ -17,15 +17,30 @@
         android:background="@color/branch_deepview_divider"
         android:alpha="0.2" />
 
-    <!-- Image -->
-    <view
-        class="io.branch.search.BranchDeepViewFragment$PercentImageView"
-        android:background="@color/branch_deepview_image_background"
-        android:id="@+id/branch_deepview_image"
+    <!-- Scrollable container -->
+    <view class="io.branch.search.BranchDeepViewFragment$PercentScrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="@dimen/branch_deepview_image_padding"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <!-- Image -->
+            <view
+                class="io.branch.search.BranchDeepViewFragment$PercentImageView"
+                android:background="@color/branch_deepview_image_background"
+                android:id="@+id/branch_deepview_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/branch_deepview_image_padding"/>
 
-    <!-- Content -->
-    <include layout="@layout/branch_deepview_content"/>
+            <!-- Content -->
+            <include layout="@layout/branch_deepview_content"/>
+        </LinearLayout>
+    </view>
+
+    <!-- Button -->
+    <include layout="@layout/branch_deepview_button"/>
 </LinearLayout>
