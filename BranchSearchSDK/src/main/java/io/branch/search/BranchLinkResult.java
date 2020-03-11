@@ -9,16 +9,55 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringDef;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * Class for representing a a deep link to content
  */
 public class BranchLinkResult implements Parcelable {
+    public static final String ICON_CATEGORY_BUSINESS = "business";
+    public static final String ICON_CATEGORY_CARS = "cars";
+    public static final String ICON_CATEGORY_COMMUNICATION = "communication";
+    public static final String ICON_CATEGORY_EDUCATION = "education";
+    public static final String ICON_CATEGORY_EVENTS = "events";
+    public static final String ICON_CATEGORY_FOOD = "food";
+    public static final String ICON_CATEGORY_GAMES = "games";
+    public static final String ICON_CATEGORY_HEALTH = "health";
+    public static final String ICON_CATEGORY_HOME = "home";
+    public static final String ICON_CATEGORY_LIFESTYLE = "lifestyle";
+    public static final String ICON_CATEGORY_MAPS = "maps";
+    public static final String ICON_CATEGORY_MUSIC = "music";
+    public static final String ICON_CATEGORY_NEWS = "news";
+    public static final String ICON_CATEGORY_OTHER = "other";
+    public static final String ICON_CATEGORY_PHOTOS = "photos";
+    public static final String ICON_CATEGORY_SHOPPING = "shopping";
+    public static final String ICON_CATEGORY_SOCIAL = "social";
+    public static final String ICON_CATEGORY_SPORTS = "sports";
+    public static final String ICON_CATEGORY_TRAVEL = "travel";
+    public static final String ICON_CATEGORY_UTILITIES = "utilities";
+    public static final String ICON_CATEGORY_VIDEO = "video";
+
+    /** Lists the possible values for {@link #getIconCategory()}. */
+    @SuppressWarnings("WeakerAccess")
+    @StringDef({
+            ICON_CATEGORY_BUSINESS, ICON_CATEGORY_CARS, ICON_CATEGORY_COMMUNICATION,
+            ICON_CATEGORY_EDUCATION, ICON_CATEGORY_EVENTS, ICON_CATEGORY_FOOD,
+            ICON_CATEGORY_GAMES, ICON_CATEGORY_HEALTH, ICON_CATEGORY_HOME, ICON_CATEGORY_LIFESTYLE,
+            ICON_CATEGORY_MAPS, ICON_CATEGORY_MUSIC, ICON_CATEGORY_NEWS, ICON_CATEGORY_OTHER,
+            ICON_CATEGORY_PHOTOS, ICON_CATEGORY_SHOPPING, ICON_CATEGORY_SOCIAL, ICON_CATEGORY_SPORTS,
+            ICON_CATEGORY_TRAVEL, ICON_CATEGORY_UTILITIES, ICON_CATEGORY_VIDEO
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface IconCategory {}
+
     private static final String LINK_ENTITY_ID_KEY = "entity_id";
     private static final String LINK_TYPE_KEY = "type";
     private static final String LINK_SCORE_KEY = "score";
@@ -32,6 +71,7 @@ public class BranchLinkResult implements Parcelable {
     private static final String LINK_TRACKING_KEY = "click_tracking_link";
     private static final String LINK_RANKING_HINT_KEY = "ranking_hint";
     private static final String LINK_ANDROID_SHORTCUT_ID_KEY = "android_shortcut_id";
+    private static final String LINK_ICON_CATEGORY = "icon_category";
 
     private String entity_id;
     private String name;
@@ -50,6 +90,7 @@ public class BranchLinkResult implements Parcelable {
     private String destination_store_id;
     private String click_tracking_url;
     private String android_shortcut_id;
+    private String icon_category;
 
     private BranchLinkResult() {
     }
@@ -112,6 +153,8 @@ public class BranchLinkResult implements Parcelable {
         return uri_scheme;
     }
 
+    @SuppressWarnings("WeakerAccess")
+    @NonNull
     public String getWebLink() {
         String webLink = web_link;
         if (webLink == null) {
@@ -133,9 +176,21 @@ public class BranchLinkResult implements Parcelable {
      * To inspect the package, please see {@link #getDestinationPackageName()}.
      * @return id or null
      */
+    @SuppressWarnings("WeakerAccess")
     @Nullable
     public String getAndroidShortcutId() {
         return TextUtils.isEmpty(android_shortcut_id) ? null : android_shortcut_id;
+    }
+
+    /**
+     * Returns the icon category, one of the {@code ICON_CATEGORY_} constants in this class.
+     * @return the icon category for this result
+     */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @IconCategory
+    @NonNull
+    public String getIconCategory() {
+        return icon_category;
     }
 
     /**
@@ -159,7 +214,7 @@ public class BranchLinkResult implements Parcelable {
      * @param manager a fragment manager
      * @return an error if the deep view could not be opened
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
     @Nullable
     public BranchSearchError openDeepView(@NonNull FragmentManager manager) {
         registerClickEvent();
@@ -295,6 +350,7 @@ public class BranchLinkResult implements Parcelable {
 
         link.click_tracking_url = Util.optString(actionJson, LINK_TRACKING_KEY);
         link.android_shortcut_id = Util.optString(actionJson, LINK_ANDROID_SHORTCUT_ID_KEY);
+        link.icon_category = actionJson.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
         return link;
     }
 
@@ -323,8 +379,8 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.destination_store_id);
         dest.writeString(this.click_tracking_url);
         dest.writeString(this.android_shortcut_id);
+        dest.writeString(this.icon_category);
     }
-
 
     private BranchLinkResult(Parcel in) {
         this.entity_id = in.readString();
@@ -349,6 +405,7 @@ public class BranchLinkResult implements Parcelable {
         this.destination_store_id = in.readString();
         this.click_tracking_url = in.readString();
         this.android_shortcut_id = in.readString();
+        this.icon_category = in.readString();
     }
 
     public static final Creator<BranchLinkResult> CREATOR = new Creator<BranchLinkResult>() {
