@@ -31,7 +31,21 @@
         <!-- Top header -->
         <include layout="@layout/branch_deepview_toolbar" />
 
-        <!-- Content -->
-        <include layout="@layout/branch_deepview_content" />
+        <!-- Scrollable content -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <include layout="@layout/branch_deepview_content" />
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Button -->
+        <include layout="@layout/branch_deepview_button" />
     </LinearLayout>
 </LinearLayout>

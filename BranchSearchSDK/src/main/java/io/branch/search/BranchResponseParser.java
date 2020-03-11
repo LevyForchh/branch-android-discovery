@@ -33,6 +33,8 @@ class BranchResponseParser {
     private static final String RANKING_HINT_KEY = "ranking_hint";
     private static final String NOT_INSTALLED_MAX_RESULTS_KEY = "not_installed_max_results";
 
+    private static final String DEEPVIEW_EXTRA_TEXT_KEY = "deepview_extra_text";
+
 
     static BranchSearchResult parse(BranchSearchRequest query, JSONObject object) {
         String corrected_query = null;
@@ -66,6 +68,7 @@ class BranchResponseParser {
             String icon_url = Util.optString(resultObj, APP_ICON_URL_KEY);
             float score = (float)resultObj.optDouble(APP_SCORE_KEY, 0.0);
             String rankingHint = Util.optString(resultObj, RANKING_HINT_KEY);
+            String deepviewExtraText = Util.optString(resultObj, DEEPVIEW_EXTRA_TEXT_KEY);
             Context appContext = BranchSearch.getInstance().getApplicationContext();
             boolean isInstalled = Util.isAppInstalled(appContext, store_id);
 
@@ -78,7 +81,8 @@ class BranchResponseParser {
                             rawDeepLinks.optJSONObject(j),
                             name,
                             store_id,
-                            icon_url);
+                            icon_url,
+                            deepviewExtraText);
                     deepLinks.add(link);
                 }
             }

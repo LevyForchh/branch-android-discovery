@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -18,7 +20,6 @@ import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.ColorRes;
 import android.support.annotation.DimenRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -26,14 +27,18 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CircularProgressDrawable;
 import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -102,6 +107,7 @@ public class BranchDeepViewFragment extends DialogFragment {
         return inflater.inflate(R.layout.branch_deepview, container, false);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -125,6 +131,10 @@ public class BranchDeepViewFragment extends DialogFragment {
         // Description
         TextView description = view.findViewById(R.id.branch_deepview_description);
         if (description != null) loadText(description, link.getDescription());
+
+        // Extra text
+        TextView extra = view.findViewById(R.id.branch_deepview_extra);
+        if (extra != null) loadText(extra, link.deepview_extra_text);
 
         // Image
         ImageView image = view.findViewById(R.id.branch_deepview_image);
@@ -213,6 +223,9 @@ public class BranchDeepViewFragment extends DialogFragment {
                         //noinspection ConstantConditions
                         stream = response.body().byteStream();
                         final Bitmap bitmap = BitmapFactory.decodeStream(stream);
+                        if (bitmap == null) { // Go to the 'catch' block.
+                            throw new NullPointerException();
+                        }
                         imageView.post(new Runnable() {
                             @Override
                             public void run() {
@@ -302,6 +315,24 @@ public class BranchDeepViewFragment extends DialogFragment {
         }
     }
 
+    // Custom views that are helpful to ensure consistency of dialog height
+    // among different results, displays, setups and font sizes.
+
+    private static int getPercentMeasureSpec(@NonNull Resources resources,
+                                             int heightMeasureSpec,
+                                             float fraction) {
+        int size = View.MeasureSpec.getSize(heightMeasureSpec);
+        int mode = View.MeasureSpec.getMode(heightMeasureSpec);
+        int target = (int) (fraction * resources.getDisplayMetrics().heightPixels);
+        if (mode == View.MeasureSpec.AT_MOST) {
+            target = Math.min(target, size);
+        } else if (mode == View.MeasureSpec.EXACTLY) {
+            target = size;
+        }
+        return View.MeasureSpec.makeMeasureSpec(target, View.MeasureSpec.EXACTLY);
+    }
+
+    /** An {@link ImageView} with height set to a fraction of display height. */
     public static class PercentImageView extends ImageView {
         public PercentImageView(Context context, @Nullable AttributeSet attrs) {
             super(context, attrs);
@@ -309,10 +340,21 @@ public class BranchDeepViewFragment extends DialogFragment {
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(
-                    (int) (0.3F * getResources().getDisplayMetrics().heightPixels),
-                    MeasureSpec.EXACTLY
-            ));
+            int spec = getPercentMeasureSpec(getResources(), heightMeasureSpec, 0.2F);
+            super.onMeasure(widthMeasureSpec, spec);
+        }
+    }
+
+    /** An {@link ScrollView} with height set to a fraction of display height. */
+    public static class PercentScrollView extends ScrollView {
+        public PercentScrollView(Context context, @Nullable AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int spec = getPercentMeasureSpec(getResources(), heightMeasureSpec, 0.45F);
+            super.onMeasure(widthMeasureSpec, spec);
         }
     }
 }

@@ -7,7 +7,7 @@
         android:id="@+id/branch_deepview_title"
         android:textSize="@dimen/branch_deepview_title_text"
         android:textColor="?android:attr/textColorPrimary"
-        android:maxLines="3"
+        android:maxLines="2"
         android:ellipsize="end"
         android:layout_marginTop="16dp"
         android:layout_marginLeft="16dp"
@@ -27,37 +27,21 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
+    <TextView
+        android:id="@+id/branch_deepview_extra"
+        android:textSize="@dimen/branch_deepview_description_text"
+        android:textColor="?android:attr/textColorSecondary"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <!-- Space for tall layouts -->
     <Space
-        android:minHeight="32dp"
+        android:minHeight="16dp"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
-
-    <TextView
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:id="@+id/branch_deepview_button_description"
-        android:text="@string/branch_deepview_button_description"
-        android:textSize="@dimen/branch_deepview_button_description_text"
-        android:textColor="?android:attr/textColorTertiary"
-        android:layout_gravity="center_horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/branch_deepview_button"
-        android:text="@string/branch_deepview_button"
-        android:layout_marginTop="@dimen/branch_deepview_button_margin_top"
-        android:layout_marginLeft="@dimen/branch_deepview_button_margin_horizontal"
-        android:layout_marginRight="@dimen/branch_deepview_button_margin_horizontal"
-        android:layout_marginBottom="@dimen/branch_deepview_button_margin_bottom"
-        android:background="@drawable/branch_deepview_button_background"
-        android:textSize="@dimen/branch_deepview_button_text"
-        android:textColor="@color/branch_deepview_button_text"
-        android:stateListAnimator="@null"
-        android:elevation="@dimen/branch_deepview_button_elevation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
 
 </merge>
