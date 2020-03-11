@@ -72,6 +72,7 @@ public class BranchLinkResult implements Parcelable {
     private static final String LINK_RANKING_HINT_KEY = "ranking_hint";
     private static final String LINK_ANDROID_SHORTCUT_ID_KEY = "android_shortcut_id";
     private static final String LINK_ICON_CATEGORY = "icon_category";
+    private static final String LINK_DEEPVIEW_EXTRA_TEXT_KEY = "deepview_extra_text";
 
     private String entity_id;
     private String name;
@@ -91,6 +92,7 @@ public class BranchLinkResult implements Parcelable {
     private String click_tracking_url;
     private String android_shortcut_id;
     private String icon_category;
+    private String deepview_extra_text;
 
     private BranchLinkResult() {
     }
@@ -235,7 +237,9 @@ public class BranchLinkResult implements Parcelable {
      * @param fallbackToPlayStore If set to {@code true} fallbacks to the Google play if the app is not installed and there is no valid web url.
      * @return BranchSearchError {@link BranchSearchError} object to pass any error with complete action. Null if succeeded.
      */
-    public BranchSearchError openContent(Context context, boolean fallbackToPlayStore) {
+    @SuppressWarnings("UnusedReturnValue")
+    @Nullable
+    public BranchSearchError openContent(@NonNull Context context, boolean fallbackToPlayStore) {
         registerClickEvent();
 
         // 1. Try to open the app as an Android shortcut
@@ -328,7 +332,8 @@ public class BranchLinkResult implements Parcelable {
     static BranchLinkResult createFromJson(@NonNull JSONObject actionJson,
                                            @NonNull String appName,
                                            @NonNull String appStoreId,
-                                           @NonNull String appIconUrl) {
+                                           @NonNull String appIconUrl,
+                                           @NonNull String appDeepviewExtraText) {
         BranchLinkResult link = new BranchLinkResult();
         link.entity_id = Util.optString(actionJson, LINK_ENTITY_ID_KEY);
         link.type = Util.optString(actionJson, LINK_TYPE_KEY);
@@ -351,6 +356,8 @@ public class BranchLinkResult implements Parcelable {
         link.click_tracking_url = Util.optString(actionJson, LINK_TRACKING_KEY);
         link.android_shortcut_id = Util.optString(actionJson, LINK_ANDROID_SHORTCUT_ID_KEY);
         link.icon_category = actionJson.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
+        link.deepview_extra_text = actionJson.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY,
+                appDeepviewExtraText);
         return link;
     }
 
@@ -377,12 +384,15 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.uri_scheme);
         dest.writeString(this.web_link);
         dest.writeString(this.destination_store_id);
+
         dest.writeString(this.click_tracking_url);
         dest.writeString(this.android_shortcut_id);
         dest.writeString(this.icon_category);
+        dest.writeString(this.deepview_extra_text);
     }
 
-    private BranchLinkResult(Parcel in) {
+
+    private BranchLinkResult(@NonNull Parcel in) {
         this.entity_id = in.readString();
         this.type = in.readString();
         this.score = in.readFloat();
@@ -403,9 +413,11 @@ public class BranchLinkResult implements Parcelable {
         this.uri_scheme = in.readString();
         this.web_link = in.readString();
         this.destination_store_id = in.readString();
+
         this.click_tracking_url = in.readString();
         this.android_shortcut_id = in.readString();
         this.icon_category = in.readString();
+        this.deepview_extra_text = in.readString();
     }
 
     public static final Creator<BranchLinkResult> CREATOR = new Creator<BranchLinkResult>() {

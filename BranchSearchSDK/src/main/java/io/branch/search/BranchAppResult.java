@@ -23,7 +23,7 @@ public class BranchAppResult implements Parcelable {
     BranchAppResult(String appStoreID, String appName, String appIconUrl,
                     @NonNull String rankingHint,
                     float score,
-                    List<BranchLinkResult> deep_links) {
+                    @NonNull List<BranchLinkResult> deep_links) {
         this.app_store_id = appStoreID;
         this.app_name = appName;
         this.app_icon_url = appIconUrl;
@@ -80,6 +80,7 @@ public class BranchAppResult implements Parcelable {
     /**
      * @return a list of Deep Links.
      */
+    @NonNull
     public List<BranchLinkResult> getDeepLinks() { return this.deep_links; }
 
     //---- Parcelable implementation -------//
