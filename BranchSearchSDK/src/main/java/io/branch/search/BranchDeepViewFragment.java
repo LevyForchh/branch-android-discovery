@@ -318,9 +318,11 @@ public class BranchDeepViewFragment extends DialogFragment {
     // Custom views that are helpful to ensure consistency of dialog height
     // among different results, displays, setups and font sizes.
 
-    private static int getPercentMeasureSpec(@NonNull Resources resources, int spec, float fraction) {
-        int size = View.MeasureSpec.getSize(spec);
-        int mode = View.MeasureSpec.getMode(spec);
+    private static int getPercentMeasureSpec(@NonNull Resources resources,
+                                             int heightMeasureSpec,
+                                             float fraction) {
+        int size = View.MeasureSpec.getSize(heightMeasureSpec);
+        int mode = View.MeasureSpec.getMode(heightMeasureSpec);
         int target = (int) (fraction * resources.getDisplayMetrics().heightPixels);
         if (mode == View.MeasureSpec.AT_MOST) {
             target = Math.min(target, size);
