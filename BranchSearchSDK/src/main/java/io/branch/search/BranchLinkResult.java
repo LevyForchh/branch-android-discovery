@@ -87,12 +87,12 @@ public class BranchLinkResult implements Parcelable {
 
     private String routing_mode;
     private String uri_scheme;
-    String web_link;
+    String web_link; /* read by BranchResponseParser */
     private String destination_store_id;
     private String click_tracking_url;
     private String android_shortcut_id;
     private String icon_category;
-    private String deepview_extra_text;
+    String deepview_extra_text; /* read by BranchDeepViewFragment */
 
     private BranchLinkResult() {
     }

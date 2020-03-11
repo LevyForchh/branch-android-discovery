@@ -18,7 +18,6 @@ import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.ColorRes;
 import android.support.annotation.DimenRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -125,6 +124,10 @@ public class BranchDeepViewFragment extends DialogFragment {
         // Description
         TextView description = view.findViewById(R.id.branch_deepview_description);
         if (description != null) loadText(description, link.getDescription());
+
+        // Extra text
+        TextView extra = view.findViewById(R.id.branch_deepview_extra);
+        if (extra != null) loadText(extra, link.deepview_extra_text);
 
         // Image
         ImageView image = view.findViewById(R.id.branch_deepview_image);
@@ -310,7 +313,7 @@ public class BranchDeepViewFragment extends DialogFragment {
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(
-                    (int) (0.3F * getResources().getDisplayMetrics().heightPixels),
+                    (int) (0.2F * getResources().getDisplayMetrics().heightPixels),
                     MeasureSpec.EXACTLY
             ));
         }
