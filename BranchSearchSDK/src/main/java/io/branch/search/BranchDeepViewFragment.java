@@ -134,13 +134,7 @@ public class BranchDeepViewFragment extends DialogFragment {
 
         // Extra text
         TextView extra = view.findViewById(R.id.branch_deepview_extra);
-        if (extra != null) {
-            loadText(extra, link.deepview_extra_text);
-            if (System.currentTimeMillis() % 2 != 0) {
-                loadText(extra, "Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. Big text for testing. ");
-                extra.setVisibility(View.VISIBLE);
-            }
-        }
+        if (extra != null) loadText(extra, link.deepview_extra_text);
 
         // Image
         ImageView image = view.findViewById(R.id.branch_deepview_image);
@@ -361,28 +355,4 @@ public class BranchDeepViewFragment extends DialogFragment {
             super.onMeasure(widthMeasureSpec, spec);
         }
     }
-
-    /* A {@link TextView} with height set to a fraction of display height. */
-    /* public static class PercentTextView extends TextView {
-        public PercentTextView(Context context, @Nullable AttributeSet attrs) {
-            super(context, attrs);
-            int height = (int) (0.3F * context.getResources().getDisplayMetrics().heightPixels);
-            setMinHeight(height);
-            setMaxHeight(height);
-            // Make extra text scrollable, but ensure it works well inside other scrollable views
-            // by reclaiming the touch event on ACTION_DOWN.
-            setMovementMethod(ScrollingMovementMethod.getInstance());
-            setOnTouchListener(new View.OnTouchListener() {
-                @SuppressLint("ClickableViewAccessibility")
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    int action = event.getActionMasked();
-                    if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
-                        v.getParent().requestDisallowInterceptTouchEvent(true);
-                    }
-                    return false;
-                }
-            });
-        }
-    } */
 }
