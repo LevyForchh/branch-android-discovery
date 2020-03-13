@@ -282,24 +282,28 @@ public class BranchLinkResult implements Parcelable {
         return handler.launchShortcut(context, id, destination_store_id);
     }
 
-    private boolean openAppWithUriScheme(Context context) {
-        boolean isAppOpened = false;
-        int intentFlags = BranchSearch.getInstance().getBranchConfiguration().getLaunchIntentFlags();
-
+    /**
+     * Tries to open this result with the uri scheme, if present.
+     * @param context a context
+     * @return true if succeeded
+     */
+    private boolean openAppWithUriScheme(@NonNull Context context) {
         try {
             if (!TextUtils.isEmpty(uri_scheme)) {
-                Uri uri = Uri.parse(uri_scheme);
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                int intentFlags = BranchSearch.getInstance()
+                        .getBranchConfiguration()
+                        .getLaunchIntentFlags();
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(uri_scheme));
                 intent.setFlags(intentFlags);
-                if (intent.resolveActivity(context.getPackageManager()) != null) {
-                    context.startActivity(intent);
-                    isAppOpened = true;
-                }
+                intent.setPackage(getDestinationPackageName());
+                context.startActivity(intent);
+                return true;
             }
         } catch (Exception ignore) {
             // Nothing to do
         }
-        return isAppOpened;
+        return false;
     }
 
     /**
