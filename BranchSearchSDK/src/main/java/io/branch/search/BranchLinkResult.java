@@ -250,12 +250,17 @@ public class BranchLinkResult implements Parcelable {
             success = openAppWithUriScheme(context);
         }
 
-        // 3. If URI Scheme is not working try opening with the web link in browser
+        // 3. Try opening with the web link in app
         if (!success) {
-            success = openAppWithWebLink(context);
+            success = openAppWithWebLink(context, true);
         }
 
-        // 4. Fallback to the playstore
+        // 4. Try opening with the web link in browser
+        if (!success) {
+            success = openAppWithWebLink(context, false);
+        }
+
+        // 5. Fallback to the playstore
         if (!success && fallbackToPlayStore) {
             success = openAppWithPlayStore(context);
         }
@@ -297,21 +302,30 @@ public class BranchLinkResult implements Parcelable {
         return isAppOpened;
     }
 
-    private boolean openAppWithWebLink(Context context) {
-        boolean isAppOpened = false;
-
+    /**
+     * Tries to open this result with the web link.
+     * If forcePackage is true, the package is passed to the intent to avoid the app chooser.
+     * This can fail if the app does not support this link. If forcePackage is false, no
+     * package is set and the browser will be launched.
+     * @param context context
+     * @param forcePackage true to force package
+     * @return true if succeeded
+     */
+    private boolean openAppWithWebLink(@NonNull Context context, boolean forcePackage) {
         try {
             if (!TextUtils.isEmpty(getWebLink())) {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse(getWebLink()));
+                if (forcePackage) {
+                    intent.setPackage(getDestinationPackageName());
+                }
                 context.startActivity(intent);
-
-                isAppOpened = true;
+                return true;
             }
         } catch (Exception ignore) {
             // Nothing to do
         }
-        return isAppOpened;
+        return false;
     }
 
     private boolean openAppWithPlayStore(Context context) {
