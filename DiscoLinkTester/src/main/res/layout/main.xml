@@ -1,7 +1,6 @@
-<RelativeLayout
-    android:id="@+id/root_view"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clickable="true"
@@ -14,27 +13,13 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:background="@color/bf_search_item_bg"
         android:clickable="true"
         android:focusableInTouchMode="true"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
-        tools:context="io.branch.search.linktest.HomeActivity">
+        tools:context="io.branch.search.linktest.MainActivity">
 
         <!-- Empty view is only visible when the list has no items. -->
-
-        <TextView
-            android:id="@+id/version_name_txt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginRight="10dp"
-            android:background="@android:color/transparent"
-            android:clickable="true"
-            android:text="@string/app_version"
-            android:textAppearance="@android:style/TextAppearance.Small"
-            android:textColor="@color/bf_text_white" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -46,28 +31,28 @@
                 android:name="io.branch.search.linktest.util.BranchTextEntry"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                tools:layout="@layout/fragment_branch_text_entry" />
+                tools:layout="@layout/branch_text_entry" />
 
             <fragment
                 android:id="@+id/developerShortcutEntry"
                 android:name="io.branch.search.linktest.util.BranchTextEntry"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                tools:layout="@layout/fragment_branch_text_entry" />
+                tools:layout="@layout/branch_text_entry" />
 
             <fragment
                 android:id="@+id/uriSchemeEntry"
                 android:name="io.branch.search.linktest.util.BranchTextEntry"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                tools:layout="@layout/fragment_branch_text_entry" />
+                tools:layout="@layout/branch_text_entry" />
 
             <fragment
                 android:id="@+id/webLinkEntry"
                 android:name="io.branch.search.linktest.util.BranchTextEntry"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                tools:layout="@layout/fragment_branch_text_entry" />
+                tools:layout="@layout/branch_text_entry" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -78,7 +63,9 @@
                     android:id="@+id/openContent"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Open" />
+                    android:background="@color/button_background"
+                    android:text="Open"
+                    android:textColor="@color/button_text" />
 
                 <CheckBox
                     android:id="@+id/isPlaystoreFallback"
@@ -110,7 +97,7 @@
             <ListView
                 android:id="@+id/precannedLinkList"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
+                android:layout_height="match_parent">
 
             </ListView>
 

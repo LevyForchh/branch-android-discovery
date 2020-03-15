@@ -19,12 +19,11 @@ import java.util.List;
 import io.branch.search.BranchLinkResult;
 import io.branch.search.BranchSearch;
 import io.branch.search.BranchSearchError;
-import io.branch.search.linktest.R;
 import io.branch.search.linktest.link.Link;
 import io.branch.search.linktest.link.ManualEntry;
 
 
-public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "DiscoLinkTester";
 
     private ManualEntry manualEntry;
@@ -33,7 +32,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.main);
 
         manualEntry = new ManualEntry(this);
         lastRun = findViewById(R.id.lastRunValue);

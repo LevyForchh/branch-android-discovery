@@ -18,6 +18,16 @@ public class Link implements IBranchLinkProvider {
         this.webLink = webLink;
     }
 
+    private static void prettyFormat(List<String> li, String name, String value) {
+        if (value == null) {
+            return;
+        } else if ("".equals(value)) {
+            return;
+        } else {
+            li.add(name + "='" + value + "'");
+        }
+    }
+
     @Override
     public String getPackageId() {
         return packageId;
@@ -44,15 +54,5 @@ public class Link implements IBranchLinkProvider {
         prettyFormat(output, "uri_scheme", uriScheme);
         prettyFormat(output, "web_link", webLink);
         return TextUtils.join(", ", output);
-    }
-
-    private static void prettyFormat(List<String> li, String name, String value) {
-        if (value == null) {
-            return;
-        } else if ("".equals(value)) {
-            return;
-        } else {
-            li.add(name + "='" + value + "'");
-        }
     }
 }

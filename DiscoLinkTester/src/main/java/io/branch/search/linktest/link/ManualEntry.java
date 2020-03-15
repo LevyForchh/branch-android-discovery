@@ -13,10 +13,10 @@ public class ManualEntry implements IBranchLinkProvider {
     private BranchTextEntry webLinkEntry;
 
     public ManualEntry(AppCompatActivity activity) {
-        packageIdEntry = (BranchTextEntry)activity.getSupportFragmentManager().findFragmentById(R.id.packageIdEntry);
-        developerShorcutEntry = (BranchTextEntry)activity.getSupportFragmentManager().findFragmentById(R.id.developerShortcutEntry);
-        uriSchemeEntry = (BranchTextEntry)activity.getSupportFragmentManager().findFragmentById(R.id.uriSchemeEntry);
-        webLinkEntry = (BranchTextEntry)activity.getSupportFragmentManager().findFragmentById(R.id.webLinkEntry);
+        packageIdEntry = (BranchTextEntry) activity.getSupportFragmentManager().findFragmentById(R.id.packageIdEntry);
+        developerShorcutEntry = (BranchTextEntry) activity.getSupportFragmentManager().findFragmentById(R.id.developerShortcutEntry);
+        uriSchemeEntry = (BranchTextEntry) activity.getSupportFragmentManager().findFragmentById(R.id.uriSchemeEntry);
+        webLinkEntry = (BranchTextEntry) activity.getSupportFragmentManager().findFragmentById(R.id.webLinkEntry);
 
         packageIdEntry.setHeader("Package ID");
         developerShorcutEntry.setHeader("Developer Shortcut");
