@@ -151,8 +151,15 @@ public class BranchLinkResult implements Parcelable {
         return routing_mode;
     }
 
+    /**
+     * If present, returns an Uri backed by an app-specific scheme that can
+     * deep link into the app.
+     * @return uri or null
+     */
+    @SuppressWarnings("WeakerAccess")
+    @Nullable
     public String getUriScheme() {
-        return uri_scheme;
+        return TextUtils.isEmpty(uri_scheme) ? null : uri_scheme;
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -272,6 +279,12 @@ public class BranchLinkResult implements Parcelable {
         return err;
     }
 
+    /**
+     * Tries to open this result as an Android shortcut, assuming it represents
+     * one and the current {@link IBranchShortcutHandler} can handle it.
+     * @param context a context
+     * @return true if succeeded
+     */
     private boolean openAppWithAndroidShortcut(@NonNull Context context) {
         if (Build.VERSION.SDK_INT < 25) return false;
         String id = getAndroidShortcutId();
@@ -287,6 +300,7 @@ public class BranchLinkResult implements Parcelable {
      * @param context a context
      * @return true if succeeded
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     private boolean openAppWithUriScheme(@NonNull Context context) {
         try {
             if (!TextUtils.isEmpty(uri_scheme)) {
@@ -294,9 +308,20 @@ public class BranchLinkResult implements Parcelable {
                         .getBranchConfiguration()
                         .getLaunchIntentFlags();
                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(uri_scheme));
+                Uri uri = Uri.parse(uri_scheme);
+                intent.setData(uri);
                 intent.setFlags(intentFlags);
-                intent.setPackage(getDestinationPackageName());
+                if ("android-app".equals(uri.getScheme())) {
+                    // Do not force the package! This is a special scheme
+                    // defined by Android that contains the package in the URI itself.
+                    // If app is not installed, the system should be free to handle this,
+                    // typically by going to the play store.
+                } else {
+                    // This is an app-specific URI. Enforce the package name,
+                    // just in the case of conflict between multiple apps using the same
+                    // scheme (we've seen this happening). This will avoid the app chooser.
+                    intent.setPackage(getDestinationPackageName());
+                }
                 context.startActivity(intent);
                 return true;
             }
@@ -310,16 +335,17 @@ public class BranchLinkResult implements Parcelable {
      * Tries to open this result with the web link.
      * If forcePackage is true, the package is passed to the intent to avoid the app chooser.
      * This can fail if the app does not support this link. If forcePackage is false, no
-     * package is set and the browser will be launched.
+     * package is set and the browser (or the app chooser) might be launched.
      * @param context context
      * @param forcePackage true to force package
      * @return true if succeeded
      */
     private boolean openAppWithWebLink(@NonNull Context context, boolean forcePackage) {
         try {
-            if (!TextUtils.isEmpty(getWebLink())) {
+            String webLink = getWebLink();
+            if (!TextUtils.isEmpty(webLink)) {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(getWebLink()));
+                intent.setData(Uri.parse(webLink));
                 if (forcePackage) {
                     intent.setPackage(getDestinationPackageName());
                 }
