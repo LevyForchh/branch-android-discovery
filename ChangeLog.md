@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v1.5.6
+  * _*Master Release*_ - March 16, 2020
+  * Remove chooser menu when possible.
+
 - v1.5.5
   * _*Master Release*_ - March 11, 2020
   * Bug fixes
