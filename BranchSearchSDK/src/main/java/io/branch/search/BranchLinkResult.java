@@ -58,6 +58,10 @@ public class BranchLinkResult implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     public @interface IconCategory {}
 
+    private static final String ANDROID_APP_URI_SCHEME = "android-app";
+    private static final String PLAY_STORE_URI_HOST = "play.google.com";
+    private static final String PLAY_STORE_PACKAGE_NAME = "com.android.vending";
+
     private static final String LINK_ENTITY_ID_KEY = "entity_id";
     private static final String LINK_TYPE_KEY = "type";
     private static final String LINK_SCORE_KEY = "score";
@@ -311,7 +315,7 @@ public class BranchLinkResult implements Parcelable {
                 Uri uri = Uri.parse(uri_scheme);
                 intent.setData(uri);
                 intent.setFlags(intentFlags);
-                if ("android-app".equals(uri.getScheme())) {
+                if (ANDROID_APP_URI_SCHEME.equals(uri.getScheme())) {
                     // Do not force the package! This is a special scheme
                     // defined by Android that contains the package in the URI itself.
                     // If app is not installed, the system should be free to handle this,
@@ -344,10 +348,17 @@ public class BranchLinkResult implements Parcelable {
         try {
             String webLink = getWebLink();
             if (!TextUtils.isEmpty(webLink)) {
+                Uri uri = Uri.parse(webLink);
                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(webLink));
+                intent.setData(uri);
                 if (forcePackage) {
-                    intent.setPackage(getDestinationPackageName());
+                    if (PLAY_STORE_URI_HOST.equals(uri.getHost())) {
+                        // If play store link, instead of forcing the app package, for the play
+                        // store package, so we avoid chooser between play store and browser.
+                        intent.setPackage(PLAY_STORE_PACKAGE_NAME);
+                    } else {
+                        intent.setPackage(getDestinationPackageName());
+                    }
                 }
                 context.startActivity(intent);
                 return true;
