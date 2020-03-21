@@ -368,12 +368,7 @@ public class BranchLinkResult implements Parcelable {
                 intent.setData(uri);
                 if (forcePackage) {
                     boolean isPlayStore = PLAY_STORE_URI_HOST.equals(uri.getHost());
-                    if (isPlayStore && hasApp && isAd()) {
-                        // Dirty edge case in which ad sends https://play.google.com , but the
-                        // app is actually installed - probably because recently installed.
-                        // TODO temporary. Ads should just send both uri_scheme and web_link instead!
-                        intent.setData(Uri.parse("android-app://" + destination_store_id));
-                    } else if (isPlayStore && hasPlayStore) {
+                    if (isPlayStore && hasPlayStore) {
                         // If play store link, instead of forcing the app package, for the play
                         // store package, so we avoid chooser between play store and browser.
                         intent.setPackage(PLAY_STORE_PACKAGE_NAME);
