@@ -335,8 +335,8 @@ public class BranchLinkResult implements Parcelable {
                 // android-app is a special scheme defined by Android that contains
                 // the package in the URI itself. If app is not installed, the system should be
                 // free to handle this, typically by going to the play store.
-                // NOTE: do not force the package to play store, even if available!
-                // Or it won't work.
+                // There's no risk of ambiguity here so no need to force package.
+                // (if we force the PS package, actually it won't even work.)
             }
             context.startActivity(intent);
             return true;
