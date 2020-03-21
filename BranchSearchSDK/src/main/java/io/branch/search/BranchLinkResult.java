@@ -252,23 +252,25 @@ public class BranchLinkResult implements Parcelable {
     @Nullable
     public BranchSearchError openContent(@NonNull Context context, boolean fallbackToPlayStore) {
         registerClickEvent();
+        boolean hasApp = Util.isAppInstalled(context, destination_store_id);
+        boolean hasPlayStore = Util.isAppInstalled(context, PLAY_STORE_PACKAGE_NAME);
 
         // 1. Try to open the app as an Android shortcut
-        boolean success = openAppWithAndroidShortcut(context);
+        boolean success = openAppWithAndroidShortcut(context, hasApp, hasPlayStore);
 
         // 2. Try to open the app directly with URI Scheme
         if (!success) {
-            success = openAppWithUriScheme(context);
+            success = openAppWithUriScheme(context, hasApp, hasPlayStore);
         }
 
         // 3. Try opening with the web link in app
         if (!success) {
-            success = openAppWithWebLink(context, true);
+            success = openAppWithWebLink(context, hasApp, hasPlayStore, true);
         }
 
         // 4. Try opening with the web link in browser
         if (!success) {
-            success = openAppWithWebLink(context, false);
+            success = openAppWithWebLink(context, hasApp, hasPlayStore, false);
         }
 
         // 5. Fallback to the playstore
@@ -289,7 +291,11 @@ public class BranchLinkResult implements Parcelable {
      * @param context a context
      * @return true if succeeded
      */
-    private boolean openAppWithAndroidShortcut(@NonNull Context context) {
+    @SuppressWarnings("unused")
+    private boolean openAppWithAndroidShortcut(@NonNull Context context,
+                                               boolean hasApp,
+                                               boolean hasPlayStore) {
+        if (!hasApp) return false;
         if (Build.VERSION.SDK_INT < 25) return false;
         String id = getAndroidShortcutId();
         if (id == null) return false;
@@ -304,31 +310,37 @@ public class BranchLinkResult implements Parcelable {
      * @param context a context
      * @return true if succeeded
      */
-    @SuppressWarnings("StatementWithEmptyBody")
-    private boolean openAppWithUriScheme(@NonNull Context context) {
+    private boolean openAppWithUriScheme(@NonNull Context context,
+                                         boolean hasApp,
+                                         boolean hasPlayStore) {
         try {
-            if (!TextUtils.isEmpty(uri_scheme)) {
-                int intentFlags = BranchSearch.getInstance()
-                        .getBranchConfiguration()
-                        .getLaunchIntentFlags();
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                Uri uri = Uri.parse(uri_scheme);
-                intent.setData(uri);
-                intent.setFlags(intentFlags);
-                if (ANDROID_APP_URI_SCHEME.equals(uri.getScheme())) {
-                    // Do not force the package! This is a special scheme
-                    // defined by Android that contains the package in the URI itself.
-                    // If app is not installed, the system should be free to handle this,
-                    // typically by going to the play store.
-                } else {
-                    // This is an app-specific URI. Enforce the package name,
-                    // just in the case of conflict between multiple apps using the same
-                    // scheme (we've seen this happening). This will avoid the app chooser.
-                    intent.setPackage(getDestinationPackageName());
+            String scheme = getUriScheme();
+            if (scheme == null) return false;
+            Uri uri = Uri.parse(scheme);
+            boolean isAndroidApp = ANDROID_APP_URI_SCHEME.equals(uri.getScheme());
+            if (!hasApp && !isAndroidApp) return false;
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(uri);
+            int intentFlags = BranchSearch.getInstance()
+                    .getBranchConfiguration()
+                    .getLaunchIntentFlags();
+            intent.setFlags(intentFlags);
+            if (!isAndroidApp) {
+                // This is an app-specific URI. Enforce the package name,
+                // just in the case of conflict between multiple apps using the same
+                // scheme (we've seen this happening). This will avoid the app chooser.
+                intent.setPackage(destination_store_id);
+            } else {
+                // android-app is a special scheme defined by Android that contains
+                // the package in the URI itself. If app is not installed, the system should be
+                // free to handle this, typically by going to the play store.
+                if (hasPlayStore) {
+                    intent.setPackage(PLAY_STORE_PACKAGE_NAME);
                 }
-                context.startActivity(intent);
-                return true;
             }
+            context.startActivity(intent);
+            return true;
         } catch (Exception ignore) {
             // Nothing to do
         }
@@ -338,13 +350,17 @@ public class BranchLinkResult implements Parcelable {
     /**
      * Tries to open this result with the web link.
      * If forcePackage is true, the package is passed to the intent to avoid the app chooser.
-     * This can fail if the app does not support this link. If forcePackage is false, no
-     * package is set and the browser (or the app chooser) might be launched.
+     * This can fail if the app does not support this link, so it is recommended to fire a
+     * second call with forcePackage set to false.
      * @param context context
      * @param forcePackage true to force package
      * @return true if succeeded
      */
-    private boolean openAppWithWebLink(@NonNull Context context, boolean forcePackage) {
+    @SuppressWarnings("StatementWithEmptyBody")
+    private boolean openAppWithWebLink(@NonNull Context context,
+                                       boolean hasApp,
+                                       boolean hasPlayStore,
+                                       boolean forcePackage) {
         try {
             String webLink = getWebLink();
             if (!TextUtils.isEmpty(webLink)) {
@@ -352,12 +368,16 @@ public class BranchLinkResult implements Parcelable {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(uri);
                 if (forcePackage) {
-                    if (PLAY_STORE_URI_HOST.equals(uri.getHost())) {
+                    boolean isPlayStore = PLAY_STORE_URI_HOST.equals(uri.getHost());
+                    if (isPlayStore && hasPlayStore) {
                         // If play store link, instead of forcing the app package, for the play
                         // store package, so we avoid chooser between play store and browser.
                         intent.setPackage(PLAY_STORE_PACKAGE_NAME);
+                    } else if (!isPlayStore && hasApp) {
+                        intent.setPackage(destination_store_id);
                     } else {
-                        intent.setPackage(getDestinationPackageName());
+                        // Either a PS link on a phone without PS, or a non-PS link
+                        // for an app that's not installed. Nothing to force.
                     }
                 }
                 context.startActivity(intent);
@@ -369,17 +389,8 @@ public class BranchLinkResult implements Parcelable {
         return false;
     }
 
-    private boolean openAppWithPlayStore(Context context) {
-        boolean isAppOpened = false;
-
-        try {
-            if (!TextUtils.isEmpty(destination_store_id)) {
-                isAppOpened = Util.openAppInPlayStore(context, destination_store_id);
-            }
-        } catch (Exception ignore) {
-            // Nothing to do
-        }
-        return isAppOpened;
+    private boolean openAppWithPlayStore(@NonNull Context context) {
+        return Util.openAppInPlayStore(context, destination_store_id);
     }
 
     @SuppressLint("NewApi")
