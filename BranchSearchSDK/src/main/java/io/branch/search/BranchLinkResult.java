@@ -413,6 +413,18 @@ public class BranchLinkResult implements Parcelable {
         link.icon_category = actionJson.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
         link.deepview_extra_text = actionJson.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY,
                 appDeepviewExtraText);
+
+        // TODO temporary! If ads results passed a non-http link as web_link, revert
+        //  and assign to uri_scheme instead. To be removed when we have a server-side fix.
+        if (!TextUtils.isEmpty(link.web_link)) {
+            String protocol = Uri.parse(link.web_link).getScheme();
+            if (protocol != null && !protocol.equals("http") && !protocol.equals("https")) {
+                if (TextUtils.isEmpty(link.uri_scheme)) {
+                    link.uri_scheme = link.web_link;
+                }
+                link.web_link = "";
+            }
+        }
         return link;
     }
 
