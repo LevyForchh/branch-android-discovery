@@ -25,7 +25,7 @@
         <activity android:name=".BranchPreferenceActivity" />
 
         <!-- The demo Branch Key.  Please replace this key with your own key before release. -->
-        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_jgKhogSvbj1sZ7PJiQ47dfkozAmfeA4H" />
+        <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_boJVcFCyjPZB0NubnBQvCcdmvvbTn1kd" />
 
     </application>
 
