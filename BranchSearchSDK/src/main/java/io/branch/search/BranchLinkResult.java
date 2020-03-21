@@ -253,6 +253,12 @@ public class BranchLinkResult implements Parcelable {
     public BranchSearchError openContent(@NonNull Context context, boolean fallbackToPlayStore) {
         registerClickEvent();
 
+        // Using the application context is safer than using the activity: some partners override
+        // Activity.startActivity() to swallow errors and fire an error toast instead.
+        // But we need errors to be thrown, so that we can catch them and make the best decision
+        // about how to open the link. Using the application context will circumvent the activity.
+        context = context.getApplicationContext();
+
         // 1. Try to open the app as an Android shortcut
         boolean success = openAppWithAndroidShortcut(context);
 
