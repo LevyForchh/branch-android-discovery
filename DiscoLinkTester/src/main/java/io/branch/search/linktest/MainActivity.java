@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         fireLink.setOnClickListener(this);
 
         final List<Link> precannedLinks = Arrays.asList(
+                new Link("com.google.android.youtube", "search-shortcut", null, null),
+                new Link("com.spotify.music", "search", null, null),
                 // UBER
                 new Link("com.ubercab", null, null, "android-app://com.ubercab"),
                 new Link("com.ubercab", null, "android-app://com.ubercab", null),
