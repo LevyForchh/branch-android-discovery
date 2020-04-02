@@ -134,14 +134,17 @@ As a user is typing, Auto Suggest (sometimes referred to as autocomplete) will r
 
 When a user begins typing into your search box, you should create a `BranchSearchRequest` to search for apps and content with Branch. Create a builder for each phrase you would like to search for. Don't worry, we handle debounce so feel free to create one with every character entered.
 
-**Note** that the Branch Discovery SDK will provide better results if it can use the current location. For example, a user searching for a restaurant will receive location specific results if location permissions are enabled. Be sure to add the last known location to the BranchSearchRequest via `setLocation()` or both `setLatitude()` and `setLongitude()`. For your reference, in `io.branch.search.demo.util.BranchLocationFinder`, 
+**Note** that the Branch Discovery SDK will provide better results if
+it can use the current location. For example, a user searching for a
+restaurant will receive location specific results if location permissions
+are enabled. Be sure to pass the user location to `BranchSearch.getInstance().setLocation()`!
+For your reference, in `io.branch.search.demo.util.BranchLocationFinder`,
 we have provided example code that fetches the device's last known location. 
 
 ```java
     // Create a Branch Search Request for the keyword
     // Implementation Note:  Set the last known location before searching.
     BranchSearchRequest request = BranchSearchRequest.Create(keyword)
-            .setLocation(BranchLocationFinder.getLastKnownLocation());
 
     // Search for the keyword with the Branch Search SDK
     BranchSearch.getInstance().query(request, new IBranchSearchEvents() {
