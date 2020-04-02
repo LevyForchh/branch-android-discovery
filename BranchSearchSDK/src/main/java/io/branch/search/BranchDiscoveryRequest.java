@@ -17,8 +17,6 @@ import java.util.Map;
 public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
 
     enum JSONKey {
-        Latitude("user_latitude"),
-        Longitude("user_longitude"),
         Timestamp("utc_timestamp"),
         /** we want to override the configuration-level extras */
         Extra(BranchConfiguration.JSONKey.RequestExtra.toString());
@@ -36,12 +34,6 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
         private String _key;
     }
 
-    // Latitude of the user
-    private double user_latitude;
-
-    // Longitude for the user
-    private double user_longitude;
-
     private final Map<String, Object> extra = new HashMap<>();
 
     /**
@@ -52,10 +44,12 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
 
     /**
      * Set the current location.
-     * Branch Search needs location permission for better search experience.  Call this method when location updates happen.
      * @param location Location
      * @return this BranchDiscoveryRequest
+     * @deprecated please use {@link BranchSearch#setLocation(double, double)} instead
      */
+    @SuppressWarnings("deprecation")
+    @Deprecated
     public T setLocation(Location location) {
         if (location != null) {
             setLatitude(location.getLatitude());
@@ -68,10 +62,13 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
      * Set the current location - latitude.
      * @param latitude latitude
      * @return this BranchDiscoveryRequest
+     * @deprecated please use {@link BranchSearch#setLocation(double, double)} instead
      */
-    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
+    @Deprecated
+    @SuppressWarnings("UnusedReturnValue")
     public T setLatitude(double latitude) {
-        this.user_latitude = latitude;
+        BranchSearch search = BranchSearch.getInstance();
+        if (search != null) search.getBranchDeviceInfo().latitude = latitude;
         return (T) this;
     }
 
@@ -79,10 +76,13 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
      * Set the current location - longitude.
      * @param longitude latitude
      * @return this BranchDiscoveryRequest
+     * @deprecated please use {@link BranchSearch#setLocation(double, double)} instead
      */
-    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
+    @Deprecated
+    @SuppressWarnings("UnusedReturnValue")
     public T setLongitude(double longitude) {
-        this.user_longitude = longitude;
+        BranchSearch search = BranchSearch.getInstance();
+        if (search != null) search.getBranchDeviceInfo().longitude = longitude;
         return (T) this;
     }
 
@@ -111,9 +111,6 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
 
     JSONObject convertToJson(JSONObject jsonObject) {
         try {
-            jsonObject.putOpt(JSONKey.Latitude.toString(), user_latitude);
-            jsonObject.putOpt(JSONKey.Longitude.toString(), user_longitude);
-
             // Add the current timestamp.
             Long tsLong = System.currentTimeMillis();
             jsonObject.putOpt(JSONKey.Timestamp.toString(), tsLong);

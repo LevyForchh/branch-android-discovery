@@ -22,8 +22,6 @@ public class BranchSearchRequestTest {
     public void testRequestCreation() throws Throwable {
         BranchSearchRequest requestIn = BranchSearchRequest.Create("餐厅");
 
-        requestIn.setLatitude(10);
-        requestIn.setLongitude(20);
         requestIn.setMaxAppResults(100);
         requestIn.setMaxContentPerAppResults(200);
         requestIn.disableQueryModification();
@@ -46,9 +44,6 @@ public class BranchSearchRequestTest {
         Assert.assertTrue(jsonIn.getBoolean(BranchSearchRequest.JSONKey.DoNotModify.toString()));
         Assert.assertEquals(BranchQuerySource.QUERY_HINT_RESULTS.toString(),
                 jsonIn.getString(BranchSearchRequest.JSONKey.QuerySource.toString()));
-
-        Assert.assertEquals(10, jsonIn.getInt(BranchDiscoveryRequest.JSONKey.Latitude.toString()));
-        Assert.assertEquals(20, jsonIn.getInt(BranchDiscoveryRequest.JSONKey.Longitude.toString()));
 
         Assert.assertEquals("key_live_123", jsonIn.getString(BranchConfiguration.JSONKey.BranchKey.toString()));
         Assert.assertEquals("ZZ", jsonIn.getString(BranchConfiguration.JSONKey.Country.toString()));

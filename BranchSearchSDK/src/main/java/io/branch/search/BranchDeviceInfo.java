@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -26,8 +27,8 @@ import java.util.Locale;
  * This ensures that information here is always up to date.
  */
 class BranchDeviceInfo {
-    private static final String UNKNOWN_CARRIER = "bnc_no_value";
-    private static final String DEFAULT_LOCALE = "en-US";
+    @VisibleForTesting static final String UNKNOWN_CARRIER = "bnc_no_value";
+    @VisibleForTesting static final String DEFAULT_LOCALE = "en-US";
     private static final long SYNC_TIME_MILLIS = 1000 * 60 * 60; // 1 hour
 
     private String carrierName = UNKNOWN_CARRIER;
@@ -35,6 +36,8 @@ class BranchDeviceInfo {
     private String locale = DEFAULT_LOCALE;
     private String appPackage = null;
     private String appVersion = null;
+    double latitude = 0.0;
+    double longitude = 0.0;
 
     private long lastSyncTimeMillis = 0L;
     private final Object syncLock = new Object();
@@ -51,6 +54,9 @@ class BranchDeviceInfo {
 
         AppPackage("app_package"),
         AppVersion("app_version"),
+
+        Latitude("user_latitude"),
+        Longitude("user_longitude"),
 
         ScreenDpi("screen_dpi"),
         ScreenWidth("screen_width"),
@@ -114,7 +120,7 @@ class BranchDeviceInfo {
         // Check for app version and package.
         appPackage = context.getPackageName();
         try {
-            PackageInfo info = context.getPackageManager().getPackageInfo(appPackage, 0);
+            PackageInfo info = context.getPackageManager().getPackageInfo(appPackage, PackageManager.GET_CONFIGURATIONS | PackageManager.GET_META_DATA);
             appVersion = info.versionName;
         } catch (PackageManager.NameNotFoundException ignore) {
             // Can't happen.
@@ -129,8 +135,9 @@ class BranchDeviceInfo {
      * @return A value containing the hardware manufacturer of the current device.
      * @see <a href="http://developer.android.com/reference/android/os/Build.html#MANUFACTURER">Build.MANUFACTURER</a>
      */
+    @VisibleForTesting
     @NonNull
-    private String getBrand() {
+    String getBrand() {
         return android.os.Build.MANUFACTURER;
     }
 
@@ -140,23 +147,27 @@ class BranchDeviceInfo {
      * @return A value containing the hardware model of the current device.
      * @see <a href="http://developer.android.com/reference/android/os/Build.html#MODEL">Build.MODEL</a>
      */
+    @VisibleForTesting
     @NonNull
-    private String getModel() {
+    String getModel() {
         return android.os.Build.MODEL;
     }
 
+    @VisibleForTesting
     @NonNull
-    private String getLocale() {
+    String getLocale() {
         return locale;
     }
 
+    @VisibleForTesting
     @Nullable
-    private String getAppPackage() {
+    String getAppPackage() {
         return appPackage;
     }
 
+    @VisibleForTesting
     @Nullable
-    private String getAppVersion() {
+    String getAppVersion() {
         return appVersion;
     }
 
@@ -177,7 +188,8 @@ class BranchDeviceInfo {
      * current device.
      * @see <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html#ApiLevels">Android Developers - API Level and Platform Version</a>
      */
-    private int getOSVersion() {
+    @VisibleForTesting
+    int getOSVersion() {
         return android.os.Build.VERSION.SDK_INT;
     }
 
@@ -187,8 +199,9 @@ class BranchDeviceInfo {
      * @return A value containing the name of current registered operator.
      * @see <a href="https://developer.android.com/reference/android/telephony/TelephonyManager.html#getNetworkOperatorName()">Carrier</a>
      */
+    @VisibleForTesting
     @NonNull
-    private String getCarrier() {
+    String getCarrier() {
         return carrierName;
     }
 
@@ -225,6 +238,8 @@ class BranchDeviceInfo {
             addDeviceInfo(jsonObject, JSONKey.ScreenWidth.toString(), displayMetrics.widthPixels);
             addDeviceInfo(jsonObject, JSONKey.ScreenHeight.toString(), displayMetrics.heightPixels);
         }
+        addDeviceInfo(jsonObject, JSONKey.Latitude.toString(), latitude);
+        addDeviceInfo(jsonObject, JSONKey.Longitude.toString(), longitude);
         String appPackage = getAppPackage();
         String appVersion = getAppVersion();
         if (appPackage != null) {

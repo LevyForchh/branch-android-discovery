@@ -16,8 +16,6 @@ public class BranchQueryHintRequestTest {
     @Test
     public void testRequestCreation() throws Throwable {
         BranchQueryHintRequest requestIn = BranchQueryHintRequest.Create();
-        requestIn.setLatitude(10);
-        requestIn.setLongitude(20);
 
         BranchConfiguration config = new BranchConfiguration();
         config.setBranchKey("key_live_123"); // need a "valid" key
@@ -28,9 +26,6 @@ public class BranchQueryHintRequestTest {
         JSONObject jsonIn = BranchSearchInterface.createPayload(requestIn, config, info);
 
         Log.d("Branch", "QueryHint::testRequestCreation(): " + jsonIn.toString());
-
-        Assert.assertEquals(jsonIn.getInt(BranchDiscoveryRequest.JSONKey.Latitude.toString()), 10);
-        Assert.assertEquals(jsonIn.getInt(BranchDiscoveryRequest.JSONKey.Longitude.toString()), 20);
 
         Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.BranchKey.toString()), "key_live_123");
         Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.Country.toString()), "ZZ");

@@ -92,7 +92,7 @@ public class BranchTest {
         return mContext;
     }
 
-    private Context getUIContext() {
+    Context getUIContext() {
         return mActivity;
     }
 }
