@@ -120,7 +120,7 @@ class BranchDeviceInfo {
         // Check for app version and package.
         appPackage = context.getPackageName();
         try {
-            PackageInfo info = context.getPackageManager().getPackageInfo(appPackage, PackageManager.GET_CONFIGURATIONS | PackageManager.GET_META_DATA);
+            PackageInfo info = context.getPackageManager().getPackageInfo(appPackage, 0);
             appVersion = info.versionName;
         } catch (PackageManager.NameNotFoundException ignore) {
             // Can't happen.
