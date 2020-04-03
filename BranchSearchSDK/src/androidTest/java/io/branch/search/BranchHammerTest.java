@@ -29,8 +29,6 @@ public class BranchHammerTest extends BranchTest {
     private static BranchSearchRequest createTestRequest(String query) {
         BranchSearchRequest request = BranchSearchRequest.Create(query);
 
-        request.setLatitude(19.042813);
-        request.setLongitude(72.840779);
         request.setMaxAppResults(100);
         request.setMaxContentPerAppResults(200);
         request.disableQueryModification();
@@ -201,6 +199,7 @@ public class BranchHammerTest extends BranchTest {
 
     private void initializeAndWarmUp() throws Throwable {
         initBranch(createTestConfiguration());
+        BranchSearch.getInstance().setLocation(19.042813, 72.840779);
         Thread.sleep(10);
 
         // Warm-up the threads

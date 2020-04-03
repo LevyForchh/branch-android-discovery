@@ -187,4 +187,14 @@ public class BranchSearch {
         return appContext;
     }
 
+    /**
+     * Sets the location that will be appended to all search, query hint and autosuggest requests
+     * triggered by the SDK.
+     * @param latitude user latitude
+     * @param longitude user longitude
+     */
+    public void setLocation(double latitude, double longitude) {
+        branchDeviceInfo.latitude = latitude;
+        branchDeviceInfo.longitude = longitude;
+    }
 }
