@@ -144,7 +144,7 @@ we have provided example code that fetches the device's last known location.
 ```java
     // Create a Branch Search Request for the keyword
     // Implementation Note:  Set the last known location before searching.
-    BranchSearchRequest request = BranchSearchRequest.Create(keyword)
+    BranchSearchRequest request = BranchSearchRequest.Create(keyword);
 
     // Search for the keyword with the Branch Search SDK
     BranchSearch.getInstance().query(request, new IBranchSearchEvents() {
