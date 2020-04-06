@@ -116,6 +116,16 @@ public class BranchSearch {
     }
 
     /**
+     * Retrieve a list of suggestions on kinds of things one might request.
+     * @param callback {@link IBranchQueryHintEvents} Callback to receive results.
+     * @return true if the request was posted.
+     */
+    @SuppressWarnings({"UnusedReturnValue", "unused"})
+    public boolean queryHint(@NonNull IBranchQueryHintEvents callback) {
+        return queryHint(BranchQueryHintRequest.create(), callback);
+    }
+
+    /**
      * Retrieve a list of auto-suggestions based on a query parameter.
      * Example:  "piz" might return ["pizza", "pizza near me", "pizza my heart"]
      * @param request {@link BranchAutoSuggestRequest} request
