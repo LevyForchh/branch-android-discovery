@@ -11,7 +11,7 @@ public interface IBranchQueryHintEvents {
      * Called when query hint results are available
      * @param result an object containing the results
      */
-    void onBranchQueryHintResult();
+    void onBranchQueryHintResult(@NonNull BranchQueryHintResult result);
 
     /**
      * Called when there was an error processing this query hint request.

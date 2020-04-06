@@ -62,7 +62,7 @@ class BranchSearchInterface {
     }
 
     static boolean autoSuggest(final BranchAutoSuggestRequest request,
-                               final IBranchQueryResults callback) {
+                               final IBranchAutoSuggestEvents callback) {
         BranchSearch search = BranchSearch.getInstance();
         if (search == null) {
             return false;
@@ -76,9 +76,9 @@ class BranchSearchInterface {
             public void onResult(@NonNull JSONObject response) {
                 if (callback != null) {
                     if (response instanceof BranchSearchError) {
-                        callback.onError((BranchSearchError) response);
+                        callback.onBranchAutoSuggestError((BranchSearchError) response);
                     } else {
-                        callback.onQueryResult(BranchQueryResult.createFromJson(response));
+                        callback.onBranchAutoSuggestResult(BranchAutoSuggestResult.createFromJson(response));
                     }
                 }
             }
@@ -90,7 +90,7 @@ class BranchSearchInterface {
 
 
     static boolean queryHint(final BranchQueryHintRequest request,
-                             final IBranchQueryResults callback) {
+                             final IBranchQueryHintEvents callback) {
         BranchSearch search = BranchSearch.getInstance();
         if (search == null) {
             return false;
@@ -104,9 +104,9 @@ class BranchSearchInterface {
             public void onResult(@NonNull JSONObject response) {
                 if (callback != null) {
                     if (response instanceof BranchSearchError) {
-                        callback.onError((BranchSearchError) response);
+                        callback.onBranchQueryHintError((BranchSearchError) response);
                     } else {
-                        callback.onQueryResult(BranchQueryResult.createFromJson(response));
+                        callback.onBranchQueryHintResult(BranchQueryHintResult.createFromJson(response));
                     }
                 }
             }

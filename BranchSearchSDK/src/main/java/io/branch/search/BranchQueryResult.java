@@ -10,15 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class for representing a a query result
+ * Class for representing a a query result.
+ * @deprecated please use {@link BranchQueryHintResult} for query hints and
+ *             {@link BranchAutoSuggestResult} for autosuggest
  */
 @Deprecated
 public class BranchQueryResult {
     private static final String RESULTS_KEY = "results";
 
-    private List<String> queryResults;
+    final List<String> queryResults = new ArrayList<>();
 
-    private BranchQueryResult() {
+    BranchQueryResult() {
     }
 
     public List<String> getQueryResults() {
@@ -27,7 +29,6 @@ public class BranchQueryResult {
 
     static BranchQueryResult createFromJson(JSONObject jsonObject) {
         BranchQueryResult result = new BranchQueryResult();
-        result.queryResults = new ArrayList<>();
 
         try {
             JSONArray jsonArray = jsonObject.optJSONArray(RESULTS_KEY);
@@ -40,14 +41,5 @@ public class BranchQueryResult {
         }
 
         return result;
-    }
-
-    private BranchQueryResult(Parcel in) {
-        queryResults = new ArrayList<>();
-
-        int length = in.readInt();
-        for (int i = 0; i < length; i++) {
-            queryResults.add(in.readString());
-        }
     }
 }

@@ -2,9 +2,8 @@ package io.branch.search;
 
 import android.support.test.runner.AndroidJUnit4;
 
-import junit.framework.Assert;
-
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -24,11 +23,10 @@ public class BranchQueryHintResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchQueryResult result = BranchQueryResult.createFromJson(jsonResponse);
+        BranchQueryHintResult result = BranchQueryHintResult.createFromJson(jsonResponse);
         Assert.assertNotNull(result);
 
-        List<String> hints = result.getQueryResults();
-        Assert.assertEquals(3, hints.size());
+        Assert.assertEquals(3, result.getHints().size());
     }
 
     @Test
@@ -38,11 +36,10 @@ public class BranchQueryHintResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchQueryResult result = BranchQueryResult.createFromJson(jsonResponse);
+        BranchQueryHintResult result = BranchQueryHintResult.createFromJson(jsonResponse);
         Assert.assertNotNull(result);
 
-        List<String> hints = result.getQueryResults();
-        Assert.assertEquals(0, hints.size());
+        Assert.assertEquals(0, result.getHints().size());
     }
 
     @Test
@@ -52,11 +49,10 @@ public class BranchQueryHintResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchQueryResult result = BranchQueryResult.createFromJson(jsonResponse);
+        BranchQueryHintResult result = BranchQueryHintResult.createFromJson(jsonResponse);
         Assert.assertNotNull(result);
 
-        List<String> hints = result.getQueryResults();
-        Assert.assertEquals(0, hints.size());
+        Assert.assertEquals(0, result.getHints().size());
     }
 
     @Test
