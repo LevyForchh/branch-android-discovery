@@ -16,6 +16,7 @@ public class BranchQueryHintRequestTest {
     @Test
     public void testRequestCreation() throws Throwable {
         BranchQueryHintRequest requestIn = BranchQueryHintRequest.create();
+        requestIn.setMaxResults(12);
 
         BranchConfiguration config = new BranchConfiguration();
         config.setBranchKey("key_live_123"); // need a "valid" key
@@ -24,13 +25,12 @@ public class BranchQueryHintRequestTest {
 
         BranchDeviceInfo info = new BranchDeviceInfo();
         JSONObject jsonIn = BranchSearchInterface.createPayload(requestIn, config, info);
-
         Log.d("Branch", "QueryHint::testRequestCreation(): " + jsonIn.toString());
+        Assert.assertEquals(12, jsonIn.getInt(BranchQueryHintRequest.KEY_MAX_RESULTS));
 
         Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.BranchKey.toString()), "key_live_123");
         Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.Country.toString()), "ZZ");
         Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.GAID.toString()), "XYZ");
-
         Assert.assertEquals(jsonIn.getString(BranchDeviceInfo.JSONKey.OS.toString()), "ANDROID");
     }
 
@@ -45,10 +45,5 @@ public class BranchQueryHintRequestTest {
         Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.Model.toString()));
         Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.OSVersion.toString()));
         Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.Carrier.toString()));
-    }
-
-    @Test
-    public void testQueryHint() {
-
     }
 }

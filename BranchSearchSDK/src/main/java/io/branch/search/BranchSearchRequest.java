@@ -100,8 +100,7 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
                 object.putOpt(KEY_DO_NOT_MODIFY, true);
             }
             object.putOpt(KEY_QUERY_SOURCE, querySource);
-        } catch (JSONException ignore) {
-        }
+        } catch (JSONException ignore) {}
         return object;
     }
 
