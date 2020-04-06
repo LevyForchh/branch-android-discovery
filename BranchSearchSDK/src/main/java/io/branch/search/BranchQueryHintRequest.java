@@ -35,9 +35,9 @@ public class BranchQueryHintRequest extends BranchDiscoveryRequest<BranchQueryHi
     }
 
     @NonNull
+    @Override
     JSONObject toJson() {
-        JSONObject object = new JSONObject();
-        super.toJson(object);
+        JSONObject object = super.toJson();
         try {
             if (maxResults > 0) {
                 object.putOpt(KEY_MAX_RESULTS, maxResults);

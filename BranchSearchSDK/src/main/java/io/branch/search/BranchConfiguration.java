@@ -49,7 +49,7 @@ public class BranchConfiguration {
         Country("country"),
         GAID("gaid"),
         LAT("is_lat"),
-        /** matches {@link BranchDiscoveryRequest.JSONKey#Extra} */
+        /** matched by {@link BranchDiscoveryRequest#KEY_EXTRA} */
         RequestExtra("extra_data"),
         /** overrides {@link BranchDeviceInfo.JSONKey#Locale} */
         Locale(BranchDeviceInfo.JSONKey.Locale.toString());

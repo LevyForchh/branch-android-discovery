@@ -137,24 +137,12 @@ class BranchSearchInterface {
     }
 
     @NonNull
-    static JSONObject createPayload(@NonNull BranchSearchRequest request,
+    static JSONObject createPayload(@NonNull BranchDiscoveryRequest request,
                                     @NonNull BranchConfiguration configuration,
                                     @NonNull BranchDeviceInfo info) {
         JSONObject jsonPayload = request.toJson();
         info.addDeviceInfo(jsonPayload);
         configuration.addConfigurationInfo(jsonPayload);
-
-        return jsonPayload;
-    }
-
-    @NonNull
-    static JSONObject createPayload(@NonNull BranchQueryHintRequest request,
-                                    @NonNull BranchConfiguration configuration,
-                                    @NonNull BranchDeviceInfo info) {
-        JSONObject jsonPayload = request.toJson();
-        info.addDeviceInfo(jsonPayload);
-        configuration.addConfigurationInfo(jsonPayload);
-
         return jsonPayload;
     }
 }

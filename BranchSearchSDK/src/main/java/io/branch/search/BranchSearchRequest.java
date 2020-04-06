@@ -89,9 +89,14 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     }
 
     @NonNull
+    public String getQuery() {
+        return query;
+    }
+
+    @NonNull
+    @Override
     JSONObject toJson() {
-        JSONObject object = new JSONObject();
-        super.toJson(object);
+        JSONObject object = super.toJson();
         try {
             object.putOpt(KEY_LIMIT_APP_RESULTS, maxAppResults);
             object.putOpt(KEY_LIMIT_LINK_RESULTS, maxContentPerAppResults);
@@ -102,10 +107,5 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
             object.putOpt(KEY_QUERY_SOURCE, querySource);
         } catch (JSONException ignore) {}
         return object;
-    }
-
-    @NonNull
-    public String getQuery() {
-        return query;
     }
 }

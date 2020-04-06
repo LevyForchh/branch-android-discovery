@@ -1,5 +1,6 @@
 package io.branch.search;
 
+import android.support.annotation.NonNull;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
@@ -9,41 +10,29 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * QueryHint Request Tests.
+ * {@link BranchQueryHintRequest} tests.
  */
 @RunWith(AndroidJUnit4.class)
-public class BranchQueryHintRequestTest {
-    @Test
-    public void testRequestCreation() throws Throwable {
-        BranchQueryHintRequest requestIn = BranchQueryHintRequest.create();
-        requestIn.setMaxResults(12);
+public class BranchQueryHintRequestTest extends BranchDiscoveryRequestTest {
 
-        BranchConfiguration config = new BranchConfiguration();
-        config.setBranchKey("key_live_123"); // need a "valid" key
-        config.setCountryCode("ZZ");
-        config.setGoogleAdID("XYZ");
-
-        BranchDeviceInfo info = new BranchDeviceInfo();
-        JSONObject jsonIn = BranchSearchInterface.createPayload(requestIn, config, info);
-        Log.d("Branch", "QueryHint::testRequestCreation(): " + jsonIn.toString());
-        Assert.assertEquals(12, jsonIn.getInt(BranchQueryHintRequest.KEY_MAX_RESULTS));
-
-        Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.BranchKey.toString()), "key_live_123");
-        Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.Country.toString()), "ZZ");
-        Assert.assertEquals(jsonIn.getString(BranchConfiguration.JSONKey.GAID.toString()), "XYZ");
-        Assert.assertEquals(jsonIn.getString(BranchDeviceInfo.JSONKey.OS.toString()), "ANDROID");
+    @NonNull
+    @Override
+    protected BranchDiscoveryRequest newRequest() {
+        return BranchQueryHintRequest.create();
     }
 
     @Test
-    public void testHasDeviceInfo() throws Throwable {
-        BranchQueryHintRequest request = BranchQueryHintRequest.create();
+    public void testMaxResults() throws Throwable {
+        BranchQueryHintRequest requestIn = BranchQueryHintRequest.create();
+        BranchConfiguration config = new BranchConfiguration();
+        BranchDeviceInfo info = new BranchDeviceInfo();
 
-        JSONObject jsonOut = BranchSearchInterface.createPayload(request,
-                new BranchConfiguration(), new BranchDeviceInfo());
+        requestIn.setMaxResults(12);
+        JSONObject json = BranchSearchInterface.createPayload(requestIn, config, info);
+        Assert.assertEquals(12, json.getInt(BranchQueryHintRequest.KEY_MAX_RESULTS));
 
-        Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.Brand.toString()));
-        Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.Model.toString()));
-        Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.OSVersion.toString()));
-        Assert.assertNotNull(jsonOut.getString(BranchDeviceInfo.JSONKey.Carrier.toString()));
+        requestIn.setMaxResults(-1);
+        json = BranchSearchInterface.createPayload(requestIn, config, info);
+        Assert.assertFalse(json.has(BranchQueryHintRequest.KEY_MAX_RESULTS));
     }
 }

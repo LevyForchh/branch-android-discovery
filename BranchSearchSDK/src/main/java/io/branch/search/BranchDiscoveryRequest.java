@@ -16,23 +16,9 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
 
-    enum JSONKey {
-        Timestamp("utc_timestamp"),
-        /** we want to override the configuration-level extras */
-        Extra(BranchConfiguration.JSONKey.RequestExtra.toString());
-
-        JSONKey(String key) {
-            _key = key;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return _key;
-        }
-
-        private String _key;
-    }
+    final static String KEY_TIMESTAMP = "utc_timestamp";
+    // We want to override the configuration-level extras
+    final static String KEY_EXTRA = BranchConfiguration.JSONKey.RequestExtra.toString();
 
     private final Map<String, Object> extra = new HashMap<>();
 
@@ -100,6 +86,7 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
      * @return this BranchDiscoveryRequest
      */
     @SuppressWarnings("WeakerAccess")
+    @NonNull
     public T setExtra(@NonNull String key, @Nullable Object data) {
         if (data == null) {
             extra.remove(key);
@@ -109,27 +96,27 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
         return (T) this;
     }
 
-    void toJson(@NonNull JSONObject jsonObject) {
+    @NonNull
+    JSONObject toJson() {
+        JSONObject object = new JSONObject();
         try {
             // Add the current timestamp.
-            Long tsLong = System.currentTimeMillis();
-            jsonObject.putOpt(JSONKey.Timestamp.toString(), tsLong);
+            object.putOpt(KEY_TIMESTAMP, System.currentTimeMillis());
 
             // Add extra data.
             // The JSONObject for this key might already exist because the key is shared
             // between this class and BranchConfiguration.
             if (!extra.keySet().isEmpty()) {
-                JSONObject extraData = jsonObject.optJSONObject(JSONKey.Extra.toString());
+                JSONObject extraData = object.optJSONObject(KEY_EXTRA);
                 if (extraData == null) extraData = new JSONObject();
 
                 for (String key : extra.keySet()) {
                     Object value = extra.get(key);
                     extraData.putOpt(key, value);
                 }
-                jsonObject.putOpt(JSONKey.Extra.toString(), extraData);
+                object.putOpt(KEY_EXTRA, extraData);
             }
-
-
         } catch (JSONException ignore) { }
+        return object;
     }
 }
