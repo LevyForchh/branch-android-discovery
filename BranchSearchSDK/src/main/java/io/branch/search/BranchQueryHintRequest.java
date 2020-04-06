@@ -23,6 +23,8 @@ public class BranchQueryHintRequest extends BranchDiscoveryRequest<BranchQueryHi
         return new BranchQueryHintRequest();
     }
 
+    private BranchQueryHintRequest() {}
+
     /**
      * Sets the maximum number of hints that the query should return.
      * @param maxResults max results
