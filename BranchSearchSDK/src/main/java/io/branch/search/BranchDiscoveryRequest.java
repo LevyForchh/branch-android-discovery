@@ -104,12 +104,10 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
             object.putOpt(KEY_TIMESTAMP, System.currentTimeMillis());
 
             // Add extra data.
-            // The JSONObject for this key might already exist because the key is shared
-            // between this class and BranchConfiguration.
+            // The JSONObject for this key is shared between this class and BranchConfiguration.
+            // But our extra data has priority so BranchConfiguration will never overwrite these values.
             if (!extra.keySet().isEmpty()) {
-                JSONObject extraData = object.optJSONObject(KEY_EXTRA);
-                if (extraData == null) extraData = new JSONObject();
-
+                JSONObject extraData = new JSONObject();
                 for (String key : extra.keySet()) {
                     Object value = extra.get(key);
                     extraData.putOpt(key, value);
