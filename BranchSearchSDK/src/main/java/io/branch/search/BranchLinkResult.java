@@ -305,6 +305,7 @@ public class BranchLinkResult implements Parcelable {
         return handler.launchShortcut(context, id, destination_store_id);
     }
 
+
     /**
      * Tries to open this result with the uri scheme, if present.
      * @param context a context
@@ -320,7 +321,7 @@ public class BranchLinkResult implements Parcelable {
             boolean isAndroidApp = ANDROID_APP_URI_SCHEME.equals(uri.getScheme());
             if (!hasApp && !isAndroidApp) return false;
 
-            Intent intent = new Intent(Intent.ACTION_VIEW);
+            Intent intent = context.getPackageManager().getLaunchIntentForPackage(destination_store_id);;
             intent.setData(uri);
             int intentFlags = BranchSearch.getInstance()
                     .getBranchConfiguration()
