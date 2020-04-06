@@ -90,7 +90,7 @@ public class BranchHammerTest extends BranchTest {
         }
 
         @Override
-        public void onBranchSearchResult(BranchSearchResult result) {
+        public void onBranchSearchResult(@NonNull BranchSearchResult result) {
             mEnd = System.currentTimeMillis();
             mSuccess = true;
             Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
@@ -98,7 +98,7 @@ public class BranchHammerTest extends BranchTest {
         }
 
         @Override
-        public void onBranchSearchError(BranchSearchError error) {
+        public void onBranchSearchError(@NonNull BranchSearchError error) {
             mEnd = System.currentTimeMillis();
             Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
             mLatch.countDown();

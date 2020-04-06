@@ -113,13 +113,13 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
             BranchSearchRequest request = BranchSearchRequest.create(keyword);
             search.query(request, new IBranchSearchEvents() {
                 @Override
-                public void onBranchSearchResult(BranchSearchResult result) {
+                public void onBranchSearchResult(@NonNull BranchSearchResult result) {
                     // Update UI with search results. BranchSearchResult contains the result of any search.
                     branchSearchController.onBranchSearchResult(result);
                 }
 
                 @Override
-                public void onBranchSearchError(BranchSearchError error) {
+                public void onBranchSearchError(@NonNull BranchSearchError error) {
                     if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
                         Log.d(TAG, "Branch Search request was canceled.");
                     } else {
