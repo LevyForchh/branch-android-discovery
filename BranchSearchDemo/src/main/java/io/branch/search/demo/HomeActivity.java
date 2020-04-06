@@ -20,6 +20,8 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.Random;
 
+import io.branch.search.BranchAutoSuggestRequest;
+import io.branch.search.BranchQueryHintRequest;
 import io.branch.search.BranchQueryResult;
 import io.branch.search.BranchSearch;
 import io.branch.search.BranchSearchError;
@@ -106,10 +108,9 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
             }
 
 
-            // Create a Branch Search Request for the keyword
+            // Create a Branch Search Request for the keyword and
+            // search for the keyword with the Branch Search SDK
             BranchSearchRequest request = BranchSearchRequest.create(keyword);
-
-            // Search for the keyword with the Branch Search SDK
             search.query(request, new IBranchSearchEvents() {
                 @Override
                 public void onBranchSearchResult(BranchSearchResult result) {
@@ -130,7 +131,8 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
             });
 
             // Get Autosuggestions (Log them only)
-            search.autoSuggest(request, new IBranchQueryResults() {
+            BranchAutoSuggestRequest autoSuggestRequest = BranchAutoSuggestRequest.create(keyword);
+            search.autoSuggest(autoSuggestRequest, new IBranchQueryResults() {
                 @Override
                 public void onQueryResult(final BranchQueryResult result) {
                     Log.d("Branch", "onAutoSuggest: " + result.getQueryResults().toString());
@@ -203,7 +205,9 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     }
 
     private void fetchQueryHints() {
-        BranchSearch.getInstance().queryHint(new IBranchQueryResults() {
+        BranchQueryHintRequest request = BranchQueryHintRequest.create();
+        request.setMaxResults(6);
+        BranchSearch.getInstance().queryHint(request, new IBranchQueryResults() {
 
             @Override
             public void onQueryResult(final BranchQueryResult result) {
@@ -228,7 +232,6 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
                 }
             }
         });
-
     }
 
     private synchronized void updateQueryHint() {

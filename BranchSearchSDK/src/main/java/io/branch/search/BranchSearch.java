@@ -98,29 +98,33 @@ public class BranchSearch {
      * @param callback {@link IBranchSearchEvents} Callback to receive results
      * @return true if the request was posted
      */
-    public boolean query(BranchSearchRequest request, IBranchSearchEvents callback) {
+    public boolean query(@NonNull BranchSearchRequest request,
+                         @NonNull IBranchSearchEvents callback) {
         return BranchSearchInterface.search(request, callback);
     }
 
     /**
      * Retrieve a list of suggestions on kinds of things one might request.
+     * @param request A request object
      * @param callback {@link IBranchQueryResults} Callback to receive results.
      * @return true if the request was posted.
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean queryHint(final IBranchQueryResults callback) {
-        return BranchSearchInterface.queryHint(new BranchQueryHintRequest(), callback);
+    public boolean queryHint(@NonNull BranchQueryHintRequest request,
+                             @NonNull IBranchQueryResults callback) {
+        return BranchSearchInterface.queryHint(request, callback);
     }
 
     /**
      * Retrieve a list of auto-suggestions based on a query parameter.
      * Example:  "piz" might return ["pizza", "pizza near me", "pizza my heart"]
-     * @param request {@link BranchSearchRequest} request
+     * @param request {@link BranchAutoSuggestRequest} request
      * @param callback {@link IBranchQueryResults} Callback to receive results.
      * @return true if the request was posted.
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean autoSuggest(BranchSearchRequest request, final IBranchQueryResults callback) {
+    public boolean autoSuggest(@NonNull BranchAutoSuggestRequest request,
+                               @NonNull IBranchQueryResults callback) {
         return BranchSearchInterface.autoSuggest(request, callback);
     }
 
@@ -183,7 +187,7 @@ public class BranchSearch {
     @SuppressWarnings("WeakerAccess")
     public static void isServiceEnabled(@NonNull String branchKey,
                                         @NonNull IBranchServiceEnabledEvents callback) {
-        BranchSearchInterface.ServiceEnabled(branchKey, callback);
+        BranchSearchInterface.serviceEnabled(branchKey, callback);
     }
 
     @NonNull

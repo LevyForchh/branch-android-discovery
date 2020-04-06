@@ -37,7 +37,7 @@ class BranchSearchInterface {
                             == BranchSearchError.ERR_CODE.UNAUTHORIZED_ERR) {
                         // Check if the service is enabled. If it is, we'll return the original
                         // UNAUTHORIZED_ERR error. If it's not, we'll return SERVICE_DISABLED_ERR.
-                        ServiceEnabled(configuration.getBranchKey(), new IBranchServiceEnabledEvents() {
+                        serviceEnabled(configuration.getBranchKey(), new IBranchServiceEnabledEvents() {
                             @Override
                             public void onBranchServiceEnabledResult(@NonNull BranchServiceEnabledResult result) {
                                 if (result.isEnabled()) {
@@ -61,7 +61,7 @@ class BranchSearchInterface {
         return true;
     }
 
-    static boolean autoSuggest(final BranchSearchRequest request,
+    static boolean autoSuggest(final BranchAutoSuggestRequest request,
                                final IBranchQueryResults callback) {
         BranchSearch search = BranchSearch.getInstance();
         if (search == null) {
@@ -116,7 +116,7 @@ class BranchSearchInterface {
         return true;
     }
 
-    static void ServiceEnabled(@NonNull String branchKey,
+    static void serviceEnabled(@NonNull String branchKey,
                                final @NonNull IBranchServiceEnabledEvents callback) {
         // This can be called before initialization, so don't try to get the BranchSearch instance.
         // Also, we don't have a dedicated network channel, so use the raw handler.
