@@ -98,34 +98,39 @@ public class BranchSearch {
      * @param callback {@link IBranchSearchEvents} Callback to receive results
      * @return true if the request was posted
      */
-    public boolean query(BranchSearchRequest request, IBranchSearchEvents callback) {
+    public boolean query(@NonNull BranchSearchRequest request,
+                         @NonNull IBranchSearchEvents callback) {
         return BranchSearchInterface.search(request, callback);
     }
 
     /**
      * Retrieve a list of suggestions on kinds of things one might request.
+     * @param request A request object
      * @param callback {@link IBranchQueryResults} Callback to receive results.
      * @return true if the request was posted.
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean queryHint(final IBranchQueryResults callback) {
-        return BranchSearchInterface.queryHint(new BranchQueryHintRequest(), callback);
+    public boolean queryHint(@NonNull BranchQueryHintRequest request,
+                             @NonNull IBranchQueryResults callback) {
+        return BranchSearchInterface.queryHint(request, callback);
     }
 
     /**
      * Retrieve a list of auto-suggestions based on a query parameter.
      * Example:  "piz" might return ["pizza", "pizza near me", "pizza my heart"]
-     * @param request {@link BranchSearchRequest} request
+     * @param request {@link BranchAutoSuggestRequest} request
      * @param callback {@link IBranchQueryResults} Callback to receive results.
      * @return true if the request was posted.
      */
     @SuppressWarnings("UnusedReturnValue")
-    public boolean autoSuggest(BranchSearchRequest request, final IBranchQueryResults callback) {
+    public boolean autoSuggest(@NonNull BranchAutoSuggestRequest request,
+                               @NonNull IBranchQueryResults callback) {
         return BranchSearchInterface.autoSuggest(request, callback);
     }
 
     // Package Private
-    URLConnectionNetworkHandler getNetworkHandler(Channel channel) {
+    @NonNull
+    URLConnectionNetworkHandler getNetworkHandler(@NonNull Channel channel) {
         return this.networkHandlers[channel.ordinal()];
     }
 
@@ -133,6 +138,8 @@ public class BranchSearch {
     // TODO This should not be public! Once the user creates a configuration and initializes
     //  the SDK, he should not be able to change the configuration values while we're running, or
     //  our behavior might change/break/be undefined.
+    @SuppressWarnings("WeakerAccess")
+    @NonNull
     public final BranchConfiguration getBranchConfiguration() {
         return branchConfiguration;
     }
@@ -177,9 +184,10 @@ public class BranchSearch {
      * @param branchKey the branch key to check
      * @param callback a callback for receiving results
      */
+    @SuppressWarnings("WeakerAccess")
     public static void isServiceEnabled(@NonNull String branchKey,
                                         @NonNull IBranchServiceEnabledEvents callback) {
-        BranchSearchInterface.ServiceEnabled(branchKey, callback);
+        BranchSearchInterface.serviceEnabled(branchKey, callback);
     }
 
     @NonNull
@@ -196,5 +204,32 @@ public class BranchSearch {
     public void setLocation(double latitude, double longitude) {
         branchDeviceInfo.latitude = latitude;
         branchDeviceInfo.longitude = longitude;
+    }
+
+    // Legacy
+    // Deprecated version of our APIs
+
+    /**
+     * Legacy: retrieve a list of suggestions on kinds of things one might request.
+     * @deprecated please use {@link #queryHint(BranchQueryHintRequest, IBranchQueryResults)} instead
+     * @return true if the request was posted.
+     */
+    @Deprecated
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean queryHint(@NonNull IBranchQueryResults callback) {
+        return queryHint(BranchQueryHintRequest.create(), callback);
+    }
+
+    /**
+     * Legacy: retrieve a list of auto-suggestions based on a query parameter.
+     * @deprecated please use {@link #autoSuggest(BranchAutoSuggestRequest, IBranchQueryResults)} instead
+     * @return true if the request was posted.
+     */
+    @Deprecated
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean autoSuggest(@NonNull BranchSearchRequest request,
+                               @NonNull IBranchQueryResults callback) {
+        return BranchSearchInterface.autoSuggest(
+                BranchAutoSuggestRequest.create(request.getQuery()), callback);
     }
 }

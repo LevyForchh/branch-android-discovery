@@ -78,7 +78,8 @@ The Branch Discovery SDK needs to be initialized before using any search functio
 To educate your users on the value of in-app search, this endpoint will return you a short list of query "hints" that you can suggest to the user to try, even before they've began to type a search query. These are trending queries from a range of content verticals. 
 
 ```java
-        BranchSearch.getInstance().queryHint(new IBranchQueryResults() {
+        BranchQueryHintRequest request = BranchQueryHintRequest.create();
+        BranchSearch.getInstance().queryHint(request, new IBranchQueryResults() {
 
             @Override
             public void onQueryResult(final BranchQueryResult result) {
@@ -110,6 +111,7 @@ To educate your users on the value of in-app search, this endpoint will return y
 As a user is typing, Auto Suggest (sometimes referred to as autocomplete) will return a list of query completions that reflet our best predictions for what the user is searching for. We strongly recommend you add Auto Suggest to your UI since it is a critical element of a modern search experience that users now expect.
 
 ```java
+    BranchAutoSuggestRequest request = BranchAutoSuggestRequest.create("pizza");
     BranchSearch.getInstance().autoSuggest(request, new IBranchQueryResults() {
                 @Override
                 public void onQueryResult(final BranchQueryResult result) {
@@ -144,7 +146,7 @@ we have provided example code that fetches the device's last known location.
 ```java
     // Create a Branch Search Request for the keyword
     // Implementation Note:  Set the last known location before searching.
-    BranchSearchRequest request = BranchSearchRequest.Create(keyword);
+    BranchSearchRequest request = BranchSearchRequest.create(keyword);
 
     // Search for the keyword with the Branch Search SDK
     BranchSearch.getInstance().query(request, new IBranchSearchEvents() {
@@ -170,9 +172,8 @@ we have provided example code that fetches the device's last known location.
 You can control the maximum number of distinct app groups (see format of results in next section) that are returned by the API using the following code. The default is 5.
 
 ```java
-    new BranchSearchRequest(search_phrase)
+    BranchSearchRequest.create(search_phrase)
       .setMaxAppResults(10)
-      .search(context, new IBranchSearchEvents() { ... });
 ```
 
 #### Maximum content per app
@@ -180,9 +181,8 @@ You can control the maximum number of distinct app groups (see format of results
 You can control the maximum number of content links that are returned per app (see format of results in next section) that are returned by the API using the following code. The default is 5.
 
 ```java
-    new BranchSearchRequest(search_phrase)
+    BranchSearchRequest.create(search_phrase)
       .setMaxContentPerAppResults(10)
-      .search(context, new IBranchSearchEvents() { ... });
 ```
 
 ## Displaying the search results from `BranchSearchRequest`

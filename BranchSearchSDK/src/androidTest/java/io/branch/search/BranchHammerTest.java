@@ -3,19 +3,13 @@ package io.branch.search;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.test.runner.AndroidJUnit4;
-import android.text.TextUtils;
 import android.util.Log;
 
-import junit.framework.Assert;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -26,13 +20,26 @@ import java.util.concurrent.TimeUnit;
 public class BranchHammerTest extends BranchTest {
     private static final String TAG = "Branch::HammerTest";
 
-    private static BranchSearchRequest createTestRequest(String query) {
-        BranchSearchRequest request = BranchSearchRequest.Create(query);
-
+    @NonNull
+    private static BranchSearchRequest newSearchRequest(@NonNull String query) {
+        BranchSearchRequest request = BranchSearchRequest.create(query);
         request.setMaxAppResults(100);
         request.setMaxContentPerAppResults(200);
         request.disableQueryModification();
+        return request;
+    }
 
+    @NonNull
+    private static BranchAutoSuggestRequest newAutoSuggestRequest(@NonNull String query) {
+        BranchAutoSuggestRequest request = BranchAutoSuggestRequest.create(query);
+        request.setExtra("foo", "bar");
+        return request;
+    }
+
+    @NonNull
+    private static BranchQueryHintRequest newQueryHintRequest() {
+        BranchQueryHintRequest request = BranchQueryHintRequest.create();
+        request.setMaxResults(60);
         return request;
     }
 
@@ -48,7 +55,9 @@ public class BranchHammerTest extends BranchTest {
     class DoQuery extends Thread implements IBranchSearchEvents, IBranchQueryResults {
 
         final CountDownLatch mLatch;
-        BranchSearchRequest mRequest;
+        BranchSearchRequest mSearchRequest;
+        BranchAutoSuggestRequest mAutoSuggestRequest;
+        BranchQueryHintRequest mQueryHintRequest;
         long mStart;
         long mEnd;
         final int mId;
@@ -58,16 +67,18 @@ public class BranchHammerTest extends BranchTest {
             setName("HammerThread #" + id);
             mId = id;
             mLatch = latch;
-            mRequest = createTestRequest(query);
+            mSearchRequest = newSearchRequest(query);
+            mAutoSuggestRequest = newAutoSuggestRequest(query);
+            mQueryHintRequest = newQueryHintRequest();
         }
 
         @Override
         public void run() {
             Log.d(TAG, "Query#:" + mId + " STARTED.");
             mStart = System.currentTimeMillis();
-//            BranchSearch.getInstance().query(mRequest, this);
-            BranchSearch.getInstance().queryHint( this);
-//            BranchSearch.getInstance().autoSuggest( mRequest, this);
+//            BranchSearch.getInstance().query(mSearchRequest, this);
+            BranchSearch.getInstance().queryHint( mQueryHintRequest, this);
+//            BranchSearch.getInstance().autoSuggest( mAutoSuggestRequest, this);
         }
 
         boolean didSucceed() {
@@ -119,9 +130,9 @@ public class BranchHammerTest extends BranchTest {
         public void run() {
             Log.d(TAG, "Query#:" + mId + " STARTED.");
             mStart = System.currentTimeMillis();
-            BranchSearch.getInstance().query(mRequest, this);
-            BranchSearch.getInstance().queryHint( this);
-            BranchSearch.getInstance().autoSuggest( mRequest, this);
+            BranchSearch.getInstance().query(mSearchRequest, this);
+            BranchSearch.getInstance().queryHint(mQueryHintRequest,this);
+            BranchSearch.getInstance().autoSuggest(mAutoSuggestRequest, this);
         }
     }
 

@@ -1,11 +1,8 @@
 package io.branch.search;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.json.JSONObject;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +31,7 @@ public class BranchSearchResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
+        BranchSearchRequest request = BranchSearchRequest.create("Mexican");
         BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
         Assert.assertNotNull(result);
 
@@ -54,7 +51,7 @@ public class BranchSearchResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
+        BranchSearchRequest request = BranchSearchRequest.create("Mexican");
         BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
         Assert.assertNotNull(result);
 
@@ -70,7 +67,7 @@ public class BranchSearchResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
+        BranchSearchRequest request = BranchSearchRequest.create("Mexican");
         BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
         Assert.assertNotNull(result);
 
@@ -83,7 +80,7 @@ public class BranchSearchResultTest extends BranchTest {
     @Test
     public void testResultSuccess_empty3() {
         // Parse with an empty JSONObject
-        BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
+        BranchSearchRequest request = BranchSearchRequest.create("Mexican");
         BranchSearchResult result = BranchResponseParser.parse(request, new JSONObject());
         Assert.assertNotNull(result);
     }
@@ -95,7 +92,7 @@ public class BranchSearchResultTest extends BranchTest {
 
         JSONObject jsonResponse = new JSONObject(response);
 
-        BranchSearchRequest request = BranchSearchRequest.Create("Mexican");
+        BranchSearchRequest request = BranchSearchRequest.create("Mexican");
         BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
         Assert.assertNotNull(result);
 
