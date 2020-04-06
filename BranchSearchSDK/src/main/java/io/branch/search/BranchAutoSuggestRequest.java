@@ -11,7 +11,7 @@ import org.json.JSONObject;
 public class BranchAutoSuggestRequest extends BranchDiscoveryRequest<BranchAutoSuggestRequest> {
 
     static final String KEY_USER_QUERY = "user_query";
-    static final String KEY_MAX_RESULTS = "num";
+    static final String KEY_MAX_RESULTS = "limit";
 
     private int maxResults = 0;
     @NonNull
