@@ -3,6 +3,7 @@ package io.branch.search;
 /**
  * Interface for calling back Branch query related results.
  */
+@Deprecated
 public interface IBranchQueryResults {
     /**
      * Called when there is a successful Branch result available.

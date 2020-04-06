@@ -12,6 +12,7 @@ import java.util.List;
 /**
  * Class for representing a a query result
  */
+@Deprecated
 public class BranchQueryResult {
     private static final String RESULTS_KEY = "results";
 
