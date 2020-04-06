@@ -1,24 +1,27 @@
 package io.branch.search;
 
+import android.support.annotation.NonNull;
+
 import org.json.JSONObject;
 
 /**
- * Request model for Branch Search.
+ * Request model for query hint requests.
  */
-class BranchQueryHintRequest extends BranchDiscoveryRequest<BranchQueryHintRequest> {
+public class BranchQueryHintRequest extends BranchDiscoveryRequest<BranchQueryHintRequest> {
 
     /**
      * Factory Method to create a new BranchQueryHintRequest.
      * @return a new BranchQueryHintRequest.
      */
-    static BranchQueryHintRequest Create() {
-        return new  BranchQueryHintRequest();
+    @NonNull
+    public static BranchQueryHintRequest create() {
+        return new BranchQueryHintRequest();
     }
 
-    JSONObject convertToJson() {
+    @NonNull
+    JSONObject toJson() {
         JSONObject object = new JSONObject();
-        super.convertToJson(object);
-
+        super.toJson(object);
         return object;
     }
 }

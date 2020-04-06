@@ -54,6 +54,7 @@ public interface IBranchShortcutHandler {
                         | LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
                         | LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED);
                 query.setPackage(packageName);
+                //noinspection ConstantConditions
                 List<ShortcutInfo> shortcuts = launcherApps.getShortcuts(query, Process.myUserHandle());
                 if (shortcuts != null) {
                     for (ShortcutInfo shortcut : shortcuts) {

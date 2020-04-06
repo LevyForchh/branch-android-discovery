@@ -15,7 +15,7 @@ import org.junit.runner.RunWith;
 public class BranchQueryHintRequestTest {
     @Test
     public void testRequestCreation() throws Throwable {
-        BranchQueryHintRequest requestIn = BranchQueryHintRequest.Create();
+        BranchQueryHintRequest requestIn = BranchQueryHintRequest.create();
 
         BranchConfiguration config = new BranchConfiguration();
         config.setBranchKey("key_live_123"); // need a "valid" key
@@ -36,7 +36,7 @@ public class BranchQueryHintRequestTest {
 
     @Test
     public void testHasDeviceInfo() throws Throwable {
-        BranchQueryHintRequest request = BranchQueryHintRequest.Create();
+        BranchQueryHintRequest request = BranchQueryHintRequest.create();
 
         JSONObject jsonOut = BranchSearchInterface.createPayload(request,
                 new BranchConfiguration(), new BranchDeviceInfo());

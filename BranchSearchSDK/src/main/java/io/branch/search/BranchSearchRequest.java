@@ -1,7 +1,6 @@
 package io.branch.search;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,8 +13,15 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     private static final int MAX_APP_RESULT = 5;
     private static final int MAX_CONTENT_PER_APP_RESULT = 5;
 
+    static final String KEY_LIMIT_APP_RESULTS = "limit_app_results";
+    static final String KEY_LIMIT_LINK_RESULTS = "limit_link_results";
+    static final String KEY_USER_QUERY = "user_query";
+    static final String KEY_DO_NOT_MODIFY = "do_not_modify";
+    static final String KEY_QUERY_SOURCE = "query_source";
+
     // User query string
-    private final String user_query;
+    @NonNull
+    private final String query;
 
     // Flag to send to the server to indicate the query is exactly what they want.
     private boolean doNotModifyQuery;
@@ -24,44 +30,22 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     private BranchQuerySource querySource = BranchQuerySource.UNSPECIFIED;
 
     // Result limit params
-    private int maxAppResults;
-
-    private int maxContentPerAppResults;
-
-    enum JSONKey {
-        LimitAppResults("limit_app_results"),
-        LimitLinkResults("limit_link_results"),
-        UserQuery("user_query"),
-        DoNotModify("do_not_modify"),
-        QuerySource("query_source");
-
-        JSONKey(String key) {
-            _key = key;
-        }
-
-        @Override
-        public String toString() {
-            return _key;
-        }
-
-        private String _key;
-    }
+    private int maxAppResults = MAX_APP_RESULT;
+    private int maxContentPerAppResults = MAX_CONTENT_PER_APP_RESULT;
 
     /**
      * Factory Method to create a new BranchSearchRequest.
      * @param query Query String to use
      * @return a new BranchSearchRequest.
      */
-    public static BranchSearchRequest Create(String query) {
+    @NonNull
+    public static BranchSearchRequest create(@NonNull String query) {
         return new BranchSearchRequest(query);
     }
 
-    private BranchSearchRequest(String query) {
+    private BranchSearchRequest(@NonNull String query) {
         super();
-
-        this.user_query = query;
-        maxAppResults = MAX_APP_RESULT;
-        maxContentPerAppResults = MAX_CONTENT_PER_APP_RESULT;
+        this.query = query;
     }
 
     /**
@@ -70,16 +54,22 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
      * the user intended a query other than what they actually typed. For example, because of a typo.
      * @return this BranchSearchRequest
      */
+    @NonNull
+    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
     public BranchSearchRequest disableQueryModification() {
         this.doNotModifyQuery = true;
         return this;
     }
 
+    @NonNull
+    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
     public BranchSearchRequest setMaxContentPerAppResults(int maxContentPerAppResults) {
         this.maxContentPerAppResults = maxContentPerAppResults;
         return this;
     }
 
+    @NonNull
+    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
     public BranchSearchRequest setMaxAppResults(int maxAppResults) {
         this.maxAppResults = maxAppResults;
         return this;
@@ -98,26 +88,25 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
         return this;
     }
 
-    JSONObject convertToJson() {
+    @NonNull
+    JSONObject toJson() {
         JSONObject object = new JSONObject();
-        super.convertToJson(object);
-
+        super.toJson(object);
         try {
-            object.putOpt(JSONKey.LimitAppResults.toString(), maxAppResults);
-            object.putOpt(JSONKey.LimitLinkResults.toString(), maxContentPerAppResults);
-            object.putOpt(JSONKey.UserQuery.toString(), user_query);
-
+            object.putOpt(KEY_LIMIT_APP_RESULTS, maxAppResults);
+            object.putOpt(KEY_LIMIT_LINK_RESULTS, maxContentPerAppResults);
+            object.putOpt(KEY_USER_QUERY, query);
             if (doNotModifyQuery) {
-                object.putOpt(JSONKey.DoNotModify.toString(), true);
+                object.putOpt(KEY_DO_NOT_MODIFY, true);
             }
-
-            object.putOpt(JSONKey.QuerySource.toString(), querySource);
+            object.putOpt(KEY_QUERY_SOURCE, querySource);
         } catch (JSONException ignore) {
         }
         return object;
     }
 
+    @NonNull
     public String getQuery() {
-        return user_query;
+        return query;
     }
 }

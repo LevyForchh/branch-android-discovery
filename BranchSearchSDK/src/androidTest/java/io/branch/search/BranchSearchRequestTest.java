@@ -20,7 +20,7 @@ public class BranchSearchRequestTest {
 
     @Test
     public void testRequestCreation() throws Throwable {
-        BranchSearchRequest requestIn = BranchSearchRequest.Create("餐厅");
+        BranchSearchRequest requestIn = BranchSearchRequest.create("餐厅");
 
         requestIn.setMaxAppResults(100);
         requestIn.setMaxContentPerAppResults(200);
@@ -37,13 +37,12 @@ public class BranchSearchRequestTest {
         JSONObject jsonIn = BranchSearchInterface.createPayload(requestIn, config, info);
         Log.d("Branch", "SearchRequest::testRequestCreation(): " + jsonIn.toString());
 
-        Assert.assertEquals(100,
-                jsonIn.getInt(BranchSearchRequest.JSONKey.LimitAppResults.toString()));
-        Assert.assertEquals(200,
-                jsonIn.getInt(BranchSearchRequest.JSONKey.LimitLinkResults.toString()));
-        Assert.assertTrue(jsonIn.getBoolean(BranchSearchRequest.JSONKey.DoNotModify.toString()));
+        Assert.assertEquals("餐厅", jsonIn.getString(BranchSearchRequest.KEY_USER_QUERY));
+        Assert.assertEquals(100, jsonIn.getInt(BranchSearchRequest.KEY_LIMIT_APP_RESULTS));
+        Assert.assertEquals(200, jsonIn.getInt(BranchSearchRequest.KEY_LIMIT_LINK_RESULTS));
+        Assert.assertTrue(jsonIn.getBoolean(BranchSearchRequest.KEY_DO_NOT_MODIFY));
         Assert.assertEquals(BranchQuerySource.QUERY_HINT_RESULTS.toString(),
-                jsonIn.getString(BranchSearchRequest.JSONKey.QuerySource.toString()));
+                jsonIn.getString(BranchSearchRequest.KEY_QUERY_SOURCE));
 
         Assert.assertEquals("key_live_123", jsonIn.getString(BranchConfiguration.JSONKey.BranchKey.toString()));
         Assert.assertEquals("ZZ", jsonIn.getString(BranchConfiguration.JSONKey.Country.toString()));
@@ -55,7 +54,7 @@ public class BranchSearchRequestTest {
 
     @Test
     public void testHasDeviceInfo() throws Throwable {
-        BranchSearchRequest request = BranchSearchRequest.Create("MOD Pizza");
+        BranchSearchRequest request = BranchSearchRequest.create("MOD Pizza");
         JSONObject jsonOut = BranchSearchInterface.createPayload(request,
                 new BranchConfiguration(), new BranchDeviceInfo());
 
@@ -69,7 +68,7 @@ public class BranchSearchRequestTest {
     public void testHasQueryModificationFlag() throws Throwable {
         final String MODIFY_KEY = "do_not_modify";
 
-        BranchSearchRequest request = BranchSearchRequest.Create("MOD Pizza");
+        BranchSearchRequest request = BranchSearchRequest.create("MOD Pizza");
         JSONObject jsonOut = BranchSearchInterface.createPayload(request,
                 new BranchConfiguration(), new BranchDeviceInfo());
 
@@ -92,7 +91,7 @@ public class BranchSearchRequestTest {
 
     @Test
     public void testSetExtra() {
-        BranchSearchRequest request = BranchSearchRequest.Create("Pizza");
+        BranchSearchRequest request = BranchSearchRequest.create("Pizza");
         BranchConfiguration configuration = new BranchConfiguration();
         BranchDeviceInfo info = new BranchDeviceInfo();
         JSONObject json;
@@ -121,7 +120,7 @@ public class BranchSearchRequestTest {
         configuration.addRequestExtra("theme", "light");
         configuration.addRequestExtra("size", "small");
 
-        BranchSearchRequest request = BranchSearchRequest.Create("Pizza");
+        BranchSearchRequest request = BranchSearchRequest.create("Pizza");
         request.setExtra("theme", "dark");
         JSONObject json = BranchSearchInterface.createPayload(request, configuration, info);
         JSONObject extra = json.optJSONObject(BranchDiscoveryRequest.JSONKey.Extra.toString());
@@ -136,7 +135,7 @@ public class BranchSearchRequestTest {
     public void testOverrideLocale() {
         String testLocale = "xx_YY";
 
-        BranchSearchRequest request = BranchSearchRequest.Create("MOD Pizza");
+        BranchSearchRequest request = BranchSearchRequest.create("MOD Pizza");
         BranchConfiguration config = new BranchConfiguration();
         BranchDeviceInfo info = new BranchDeviceInfo();
 

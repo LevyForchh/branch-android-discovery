@@ -3,19 +3,13 @@ package io.branch.search;
 import android.support.annotation.NonNull;
 import android.support.annotation.UiThread;
 import android.support.test.runner.AndroidJUnit4;
-import android.text.TextUtils;
 import android.util.Log;
 
-import junit.framework.Assert;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +21,7 @@ public class BranchHammerTest extends BranchTest {
     private static final String TAG = "Branch::HammerTest";
 
     private static BranchSearchRequest createTestRequest(String query) {
-        BranchSearchRequest request = BranchSearchRequest.Create(query);
+        BranchSearchRequest request = BranchSearchRequest.create(query);
 
         request.setMaxAppResults(100);
         request.setMaxContentPerAppResults(200);

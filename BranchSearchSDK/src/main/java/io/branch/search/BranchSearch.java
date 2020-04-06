@@ -125,7 +125,8 @@ public class BranchSearch {
     }
 
     // Package Private
-    URLConnectionNetworkHandler getNetworkHandler(Channel channel) {
+    @NonNull
+    URLConnectionNetworkHandler getNetworkHandler(@NonNull Channel channel) {
         return this.networkHandlers[channel.ordinal()];
     }
 
@@ -133,6 +134,8 @@ public class BranchSearch {
     // TODO This should not be public! Once the user creates a configuration and initializes
     //  the SDK, he should not be able to change the configuration values while we're running, or
     //  our behavior might change/break/be undefined.
+    @SuppressWarnings("WeakerAccess")
+    @NonNull
     public final BranchConfiguration getBranchConfiguration() {
         return branchConfiguration;
     }
@@ -177,6 +180,7 @@ public class BranchSearch {
      * @param branchKey the branch key to check
      * @param callback a callback for receiving results
      */
+    @SuppressWarnings("WeakerAccess")
     public static void isServiceEnabled(@NonNull String branchKey,
                                         @NonNull IBranchServiceEnabledEvents callback) {
         BranchSearchInterface.ServiceEnabled(branchKey, callback);

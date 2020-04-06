@@ -140,7 +140,7 @@ class BranchSearchInterface {
     static JSONObject createPayload(@NonNull BranchSearchRequest request,
                                     @NonNull BranchConfiguration configuration,
                                     @NonNull BranchDeviceInfo info) {
-        JSONObject jsonPayload = request.convertToJson();
+        JSONObject jsonPayload = request.toJson();
         info.addDeviceInfo(jsonPayload);
         configuration.addConfigurationInfo(jsonPayload);
 
@@ -151,7 +151,7 @@ class BranchSearchInterface {
     static JSONObject createPayload(@NonNull BranchQueryHintRequest request,
                                     @NonNull BranchConfiguration configuration,
                                     @NonNull BranchDeviceInfo info) {
-        JSONObject jsonPayload = request.convertToJson();
+        JSONObject jsonPayload = request.toJson();
         info.addDeviceInfo(jsonPayload);
         configuration.addConfigurationInfo(jsonPayload);
 

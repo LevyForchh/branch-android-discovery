@@ -54,7 +54,7 @@ public class BranchSearchInterfaceTest extends BranchTest {
                 Mockito.anyString(),
                 Mockito.any(JSONObject.class),
                 Mockito.any(IURLConnectionEvents.class));
-        BranchSearchRequest request = BranchSearchRequest.Create("food");
+        BranchSearchRequest request = BranchSearchRequest.create("food");
 
         // Perform the request and ensure we have results.
         final CountDownLatch latch = new CountDownLatch(1);
@@ -91,7 +91,7 @@ public class BranchSearchInterfaceTest extends BranchTest {
                 Mockito.anyString(),
                 Mockito.any(JSONObject.class),
                 Mockito.any(IURLConnectionEvents.class));
-        BranchSearchRequest request = BranchSearchRequest.Create("pizza");
+        BranchSearchRequest request = BranchSearchRequest.create("pizza");
 
         // When service enabled is triggered...
         // Case 1: return ENABLED. So the final error should be UNAUTHORIZED_ERR.

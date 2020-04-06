@@ -109,7 +109,7 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
         return (T) this;
     }
 
-    JSONObject convertToJson(JSONObject jsonObject) {
+    void toJson(@NonNull JSONObject jsonObject) {
         try {
             // Add the current timestamp.
             Long tsLong = System.currentTimeMillis();
@@ -130,8 +130,6 @@ public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
             }
 
 
-        } catch (JSONException ignore) {
-        }
-        return jsonObject;
+        } catch (JSONException ignore) { }
     }
 }

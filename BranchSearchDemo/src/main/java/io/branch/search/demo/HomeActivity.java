@@ -107,7 +107,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
 
 
             // Create a Branch Search Request for the keyword
-            BranchSearchRequest request = BranchSearchRequest.Create(keyword);
+            BranchSearchRequest request = BranchSearchRequest.create(keyword);
 
             // Search for the keyword with the Branch Search SDK
             search.query(request, new IBranchSearchEvents() {
