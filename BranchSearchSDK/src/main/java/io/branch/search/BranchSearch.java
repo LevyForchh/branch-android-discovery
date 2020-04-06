@@ -205,4 +205,31 @@ public class BranchSearch {
         branchDeviceInfo.latitude = latitude;
         branchDeviceInfo.longitude = longitude;
     }
+
+    // Legacy
+    // Deprecated version of our APIs
+
+    /**
+     * Legacy: retrieve a list of suggestions on kinds of things one might request.
+     * @deprecated please use {@link #queryHint(BranchQueryHintRequest, IBranchQueryResults)} instead
+     * @return true if the request was posted.
+     */
+    @Deprecated
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean queryHint(@NonNull IBranchQueryResults callback) {
+        return queryHint(BranchQueryHintRequest.create(), callback);
+    }
+
+    /**
+     * Legacy: retrieve a list of auto-suggestions based on a query parameter.
+     * @deprecated please use {@link #autoSuggest(BranchAutoSuggestRequest, IBranchQueryResults)} instead
+     * @return true if the request was posted.
+     */
+    @Deprecated
+    @SuppressWarnings("UnusedReturnValue")
+    public boolean autoSuggest(@NonNull BranchSearchRequest request,
+                               @NonNull IBranchQueryResults callback) {
+        return BranchSearchInterface.autoSuggest(
+                BranchAutoSuggestRequest.create(request.getQuery()), callback);
+    }
 }

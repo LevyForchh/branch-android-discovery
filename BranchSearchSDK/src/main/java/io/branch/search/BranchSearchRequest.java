@@ -34,6 +34,17 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     private int maxContentPerAppResults = MAX_CONTENT_PER_APP_RESULT;
 
     /**
+     * Deprecated method. Please use {@link #create(String)} instead.
+     * @deprecated please use {@link #create(String)} instead
+     * @return a new BranchSearchRequest.
+     */
+    @Deprecated
+    @NonNull
+    public static BranchSearchRequest Create(@NonNull String query) {
+        return create(query);
+    }
+
+    /**
      * Factory Method to create a new BranchSearchRequest.
      * @param query Query String to use
      * @return a new BranchSearchRequest.
