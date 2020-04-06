@@ -11,7 +11,9 @@ import org.json.JSONObject;
 public class BranchAutoSuggestRequest extends BranchDiscoveryRequest<BranchAutoSuggestRequest> {
 
     static final String KEY_USER_QUERY = "user_query";
+    static final String KEY_MAX_RESULTS = "num";
 
+    private int maxResults = 0;
     @NonNull
     private final String query;
 
@@ -28,6 +30,17 @@ public class BranchAutoSuggestRequest extends BranchDiscoveryRequest<BranchAutoS
         this.query = query;
     }
 
+    /**
+     * Sets the maximum number of hints that the query should return.
+     * @param maxResults max results
+     * @return this for chaining
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public BranchAutoSuggestRequest setMaxResults(int maxResults) {
+        this.maxResults = maxResults;
+        return this;
+    }
+
     @NonNull
     public String getQuery() {
         return query;
@@ -39,6 +52,9 @@ public class BranchAutoSuggestRequest extends BranchDiscoveryRequest<BranchAutoS
         JSONObject object = super.toJson();
         try {
             object.putOpt(KEY_USER_QUERY, query);
+            if (maxResults > 0) {
+                object.putOpt(KEY_MAX_RESULTS, maxResults);
+            }
         } catch (JSONException ignore) {}
         return object;
     }

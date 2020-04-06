@@ -10,7 +10,7 @@ import org.json.JSONObject;
  */
 public class BranchQueryHintRequest extends BranchDiscoveryRequest<BranchQueryHintRequest> {
 
-    static final String KEY_MAX_RESULTS = "max_results";
+    static final String KEY_MAX_RESULTS = "num";
 
     private int maxResults = 0;
 
@@ -30,7 +30,7 @@ public class BranchQueryHintRequest extends BranchDiscoveryRequest<BranchQueryHi
      * @param maxResults max results
      * @return this for chaining
      */
-    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
+    @SuppressWarnings("UnusedReturnValue")
     public BranchQueryHintRequest setMaxResults(int maxResults) {
         this.maxResults = maxResults;
         return this;
