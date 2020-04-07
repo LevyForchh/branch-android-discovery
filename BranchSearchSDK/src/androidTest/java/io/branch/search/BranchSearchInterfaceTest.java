@@ -60,14 +60,14 @@ public class BranchSearchInterfaceTest extends BranchTest {
         final CountDownLatch latch = new CountDownLatch(1);
         BranchSearchInterface.search(request, new IBranchSearchEvents() {
             @Override
-            public void onBranchSearchResult(BranchSearchResult result) {
+            public void onBranchSearchResult(@NonNull BranchSearchResult result) {
                 Assert.assertNotNull(result);
                 Assert.assertTrue(result.getResults().size() > 0);
                 latch.countDown();
             }
 
             @Override
-            public void onBranchSearchError(BranchSearchError error) {
+            public void onBranchSearchError(@NonNull BranchSearchError error) {
                 throw new RuntimeException("Should not happen.");
             }
         });
@@ -133,12 +133,12 @@ public class BranchSearchInterfaceTest extends BranchTest {
         final CountDownLatch latch = new CountDownLatch(1);
         BranchSearchInterface.search(request, new IBranchSearchEvents() {
             @Override
-            public void onBranchSearchResult(BranchSearchResult result) {
+            public void onBranchSearchResult(@NonNull BranchSearchResult result) {
                 throw new RuntimeException("Should not happen.");
             }
 
             @Override
-            public void onBranchSearchError(BranchSearchError error) {
+            public void onBranchSearchError(@NonNull BranchSearchError error) {
                 Assert.assertEquals(expected, error.getErrorCode());
                 latch.countDown();
             }

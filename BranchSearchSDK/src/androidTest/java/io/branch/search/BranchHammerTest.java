@@ -52,7 +52,9 @@ public class BranchHammerTest extends BranchTest {
         return config;
     }
 
-    class DoQuery extends Thread implements IBranchSearchEvents, IBranchQueryResults {
+    class DoQuery extends Thread implements IBranchSearchEvents,
+            IBranchAutoSuggestEvents,
+            IBranchQueryHintEvents {
 
         final CountDownLatch mLatch;
         BranchSearchRequest mSearchRequest;
@@ -90,7 +92,7 @@ public class BranchHammerTest extends BranchTest {
         }
 
         @Override
-        public void onBranchSearchResult(BranchSearchResult result) {
+        public void onBranchSearchResult(@NonNull BranchSearchResult result) {
             mEnd = System.currentTimeMillis();
             mSuccess = true;
             Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
@@ -98,14 +100,7 @@ public class BranchHammerTest extends BranchTest {
         }
 
         @Override
-        public void onBranchSearchError(BranchSearchError error) {
-            mEnd = System.currentTimeMillis();
-            Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
-            mLatch.countDown();
-        }
-
-        @Override
-        public void onQueryResult(BranchQueryResult result) {
+        public void onBranchAutoSuggestResult(@NonNull BranchAutoSuggestResult result) {
             mEnd = System.currentTimeMillis();
             mSuccess = true;
             Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
@@ -113,10 +108,33 @@ public class BranchHammerTest extends BranchTest {
         }
 
         @Override
-        public void onError(BranchSearchError error) {
+        public void onBranchQueryHintResult(@NonNull BranchQueryHintResult result) {
+            mEnd = System.currentTimeMillis();
+            mSuccess = true;
+            Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
+            mLatch.countDown();
+        }
+
+        @Override
+        public void onBranchSearchError(@NonNull BranchSearchError error) {
             mEnd = System.currentTimeMillis();
             Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
             mLatch.countDown();
+        }
+
+        @Override
+        public void onBranchAutoSuggestError(@NonNull BranchSearchError error) {
+            mEnd = System.currentTimeMillis();
+            Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
+            mLatch.countDown();
+        }
+
+        @Override
+        public void onBranchQueryHintError(@NonNull BranchSearchError error) {
+            mEnd = System.currentTimeMillis();
+            Log.d(TAG, "Query#:" + mId + " ENDED. Success:" + mSuccess + " Left:" + mLatch.getCount());
+            mLatch.countDown();
+
         }
     }
 

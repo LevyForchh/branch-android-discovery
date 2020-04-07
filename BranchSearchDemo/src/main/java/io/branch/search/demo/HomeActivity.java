@@ -21,13 +21,16 @@ import java.util.List;
 import java.util.Random;
 
 import io.branch.search.BranchAutoSuggestRequest;
+import io.branch.search.BranchAutoSuggestResult;
+import io.branch.search.BranchQueryHint;
 import io.branch.search.BranchQueryHintRequest;
-import io.branch.search.BranchQueryResult;
+import io.branch.search.BranchQueryHintResult;
 import io.branch.search.BranchSearch;
 import io.branch.search.BranchSearchError;
 import io.branch.search.BranchSearchRequest;
 import io.branch.search.BranchSearchResult;
-import io.branch.search.IBranchQueryResults;
+import io.branch.search.IBranchAutoSuggestEvents;
+import io.branch.search.IBranchQueryHintEvents;
 import io.branch.search.IBranchSearchEvents;
 import io.branch.search.demo.util.BFSearchBox;
 import io.branch.search.demo.util.BranchLocationFinder;
@@ -41,7 +44,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     private BFSearchBox bfSearchBox;
     private BranchSearchController branchSearchController;
     private InputMethodManager imm;
-    private List<String> queryHints;
+    private List<BranchQueryHint> queryHints;
     private static final int LOCATION_PERMISSION_REQ_CODE = 2001;
 
     @Override
@@ -113,13 +116,13 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
             BranchSearchRequest request = BranchSearchRequest.create(keyword);
             search.query(request, new IBranchSearchEvents() {
                 @Override
-                public void onBranchSearchResult(BranchSearchResult result) {
+                public void onBranchSearchResult(@NonNull BranchSearchResult result) {
                     // Update UI with search results. BranchSearchResult contains the result of any search.
                     branchSearchController.onBranchSearchResult(result);
                 }
 
                 @Override
-                public void onBranchSearchError(BranchSearchError error) {
+                public void onBranchSearchError(@NonNull BranchSearchError error) {
                     if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
                         Log.d(TAG, "Branch Search request was canceled.");
                     } else {
@@ -132,14 +135,14 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
 
             // Get Autosuggestions (Log them only)
             BranchAutoSuggestRequest autoSuggestRequest = BranchAutoSuggestRequest.create(keyword);
-            search.autoSuggest(autoSuggestRequest, new IBranchQueryResults() {
+            search.autoSuggest(autoSuggestRequest, new IBranchAutoSuggestEvents() {
                 @Override
-                public void onQueryResult(final BranchQueryResult result) {
-                    Log.d("Branch", "onAutoSuggest: " + result.getQueryResults().toString());
+                public void onBranchAutoSuggestResult(@NonNull BranchAutoSuggestResult result) {
+                    Log.d("Branch", "onAutoSuggest: " + result.getSuggestions().toString());
                 }
 
                 @Override
-                public void onError(final BranchSearchError error) {
+                public void onBranchAutoSuggestError(@NonNull BranchSearchError error) {
                     if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
                         Log.d(TAG, "Branch AutoSuggest request was canceled.");
                     } else {
@@ -207,12 +210,12 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     private void fetchQueryHints() {
         BranchQueryHintRequest request = BranchQueryHintRequest.create();
         request.setMaxResults(6);
-        BranchSearch.getInstance().queryHint(request, new IBranchQueryResults() {
+        BranchSearch.getInstance().queryHint(request, new IBranchQueryHintEvents() {
 
             @Override
-            public void onQueryResult(final BranchQueryResult result) {
-                Log.d("Branch", "QueryHint results: " + result.getQueryResults().toString());
-                queryHints = result.getQueryResults();
+            public void onBranchQueryHintResult(@NonNull BranchQueryHintResult result) {
+                Log.d("Branch", "QueryHint results: " + result.getHints().toString());
+                queryHints = result.getHints();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -222,7 +225,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
             }
 
             @Override
-            public void onError(final BranchSearchError error) {
+            public void onBranchQueryHintError(@NonNull BranchSearchError error) {
                 if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
                     Log.d(TAG, "Branch QueryHint request was canceled.");
                 } else {
@@ -237,7 +240,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     private synchronized void updateQueryHint() {
         if (queryHints != null && queryHints.size() > 0) {
             int id = new Random().nextInt(queryHints.size());
-            bfSearchBox.setHint(queryHints.get(id));
+            bfSearchBox.setHint(queryHints.get(id).getQuery());
         }
     }
 

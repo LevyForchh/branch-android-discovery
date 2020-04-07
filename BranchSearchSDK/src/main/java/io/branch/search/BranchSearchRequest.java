@@ -9,9 +9,6 @@ import org.json.JSONObject;
  * Request model for Branch Search.
  */
 public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequest> {
-    // Default result limits
-    private static final int MAX_APP_RESULT = 5;
-    private static final int MAX_CONTENT_PER_APP_RESULT = 5;
 
     static final String KEY_LIMIT_APP_RESULTS = "limit_app_results";
     static final String KEY_LIMIT_LINK_RESULTS = "limit_link_results";
@@ -30,8 +27,8 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     private BranchQuerySource querySource = BranchQuerySource.UNSPECIFIED;
 
     // Result limit params
-    private int maxAppResults = MAX_APP_RESULT;
-    private int maxContentPerAppResults = MAX_CONTENT_PER_APP_RESULT;
+    private int maxAppResults = 0;
+    private int maxContentPerAppResults = 0;
 
     /**
      * Deprecated method. Please use {@link #create(String)} instead.
@@ -109,8 +106,12 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     JSONObject toJson() {
         JSONObject object = super.toJson();
         try {
-            object.putOpt(KEY_LIMIT_APP_RESULTS, maxAppResults);
-            object.putOpt(KEY_LIMIT_LINK_RESULTS, maxContentPerAppResults);
+            if (maxAppResults > 0) {
+                object.putOpt(KEY_LIMIT_APP_RESULTS, maxAppResults);
+            }
+            if (maxContentPerAppResults > 0) {
+                object.putOpt(KEY_LIMIT_LINK_RESULTS, maxContentPerAppResults);
+            }
             object.putOpt(KEY_USER_QUERY, query);
             if (doNotModifyQuery) {
                 object.putOpt(KEY_DO_NOT_MODIFY, true);

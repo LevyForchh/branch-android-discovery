@@ -106,25 +106,35 @@ public class BranchSearch {
     /**
      * Retrieve a list of suggestions on kinds of things one might request.
      * @param request A request object
-     * @param callback {@link IBranchQueryResults} Callback to receive results.
+     * @param callback {@link IBranchQueryHintEvents} Callback to receive results.
      * @return true if the request was posted.
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean queryHint(@NonNull BranchQueryHintRequest request,
-                             @NonNull IBranchQueryResults callback) {
+                             @NonNull IBranchQueryHintEvents callback) {
         return BranchSearchInterface.queryHint(request, callback);
+    }
+
+    /**
+     * Retrieve a list of suggestions on kinds of things one might request.
+     * @param callback {@link IBranchQueryHintEvents} Callback to receive results.
+     * @return true if the request was posted.
+     */
+    @SuppressWarnings({"UnusedReturnValue", "unused"})
+    public boolean queryHint(@NonNull IBranchQueryHintEvents callback) {
+        return queryHint(BranchQueryHintRequest.create(), callback);
     }
 
     /**
      * Retrieve a list of auto-suggestions based on a query parameter.
      * Example:  "piz" might return ["pizza", "pizza near me", "pizza my heart"]
      * @param request {@link BranchAutoSuggestRequest} request
-     * @param callback {@link IBranchQueryResults} Callback to receive results.
+     * @param callback {@link IBranchAutoSuggestEvents} Callback to receive results.
      * @return true if the request was posted.
      */
     @SuppressWarnings("UnusedReturnValue")
     public boolean autoSuggest(@NonNull BranchAutoSuggestRequest request,
-                               @NonNull IBranchQueryResults callback) {
+                               @NonNull IBranchAutoSuggestEvents callback) {
         return BranchSearchInterface.autoSuggest(request, callback);
     }
 
@@ -211,25 +221,57 @@ public class BranchSearch {
 
     /**
      * Legacy: retrieve a list of suggestions on kinds of things one might request.
-     * @deprecated please use {@link #queryHint(BranchQueryHintRequest, IBranchQueryResults)} instead
+     * @deprecated please use {@link #queryHint(BranchQueryHintRequest, IBranchQueryHintEvents)} instead
      * @return true if the request was posted.
      */
     @Deprecated
     @SuppressWarnings("UnusedReturnValue")
-    public boolean queryHint(@NonNull IBranchQueryResults callback) {
-        return queryHint(BranchQueryHintRequest.create(), callback);
+    public boolean queryHint(@NonNull final IBranchQueryResults callback) {
+        // Wrap the old callback in the new callback.
+        return queryHint(BranchQueryHintRequest.create(), new IBranchQueryHintEvents() {
+            @Override
+            public void onBranchQueryHintResult(@NonNull BranchQueryHintResult result) {
+                BranchQueryResult legacy = new BranchQueryResult();
+                for (BranchQueryHint hint : result.getHints()) {
+                    legacy.queryResults.add(hint.getQuery());
+                }
+                callback.onQueryResult(legacy);
+            }
+
+            @Override
+            public void onBranchQueryHintError(@NonNull BranchSearchError error) {
+                callback.onError(error);
+            }
+        });
     }
 
     /**
      * Legacy: retrieve a list of auto-suggestions based on a query parameter.
-     * @deprecated please use {@link #autoSuggest(BranchAutoSuggestRequest, IBranchQueryResults)} instead
+     * @deprecated please use {@link #autoSuggest(BranchAutoSuggestRequest, IBranchAutoSuggestEvents)} instead
      * @return true if the request was posted.
      */
     @Deprecated
     @SuppressWarnings("UnusedReturnValue")
     public boolean autoSuggest(@NonNull BranchSearchRequest request,
-                               @NonNull IBranchQueryResults callback) {
+                               @NonNull final IBranchQueryResults callback) {
+        // Wrap the old request in the new request.
+        // Wrap the old callback in the new callback.
         return BranchSearchInterface.autoSuggest(
-                BranchAutoSuggestRequest.create(request.getQuery()), callback);
+                BranchAutoSuggestRequest.create(request.getQuery()),
+                new IBranchAutoSuggestEvents() {
+            @Override
+            public void onBranchAutoSuggestResult(@NonNull BranchAutoSuggestResult result) {
+                BranchQueryResult legacy = new BranchQueryResult();
+                for (BranchAutoSuggestion suggestion : result.getSuggestions()) {
+                    legacy.queryResults.add(suggestion.getQuery());
+                }
+                callback.onQueryResult(legacy);
+            }
+
+            @Override
+            public void onBranchAutoSuggestError(@NonNull BranchSearchError error) {
+                callback.onError(error);
+            }
+        });
     }
 }

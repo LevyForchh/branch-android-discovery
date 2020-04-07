@@ -1,5 +1,8 @@
 package io.branch.search;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,19 +11,18 @@ import java.util.List;
  */
 public class BranchSearchResult {
     private final BranchSearchRequest query;
-    private String corrected_query;
+    private final String correctedQuery;
+    final List<BranchAppResult> results = new ArrayList<>();
 
-    final List<BranchAppResult> results;
-
-    BranchSearchResult(BranchSearchRequest query, String corrected_query) {
+    BranchSearchResult(@NonNull BranchSearchRequest query, @Nullable String correctedQuery) {
         this.query = query;
-        this.corrected_query = corrected_query;
-        this.results = new ArrayList<>();
+        this.correctedQuery = correctedQuery;
     }
 
     /**
      * @return the original Branch search query.
      */
+    @NonNull
     public BranchSearchRequest getBranchSearchRequest() {
         return query;
     }
@@ -28,11 +30,13 @@ public class BranchSearchResult {
     /**
      * @return the corrected Branch search query.
      */
-    public String getCorrectedQuery() { return corrected_query; }
+    @Nullable
+    public String getCorrectedQuery() { return correctedQuery; }
 
     /**
      * @return a list of {@link BranchAppResult}.
      */
+    @NonNull
     public List<BranchAppResult> getResults() {
         return this.results;
     }

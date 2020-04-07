@@ -78,32 +78,32 @@ The Branch Discovery SDK needs to be initialized before using any search functio
 To educate your users on the value of in-app search, this endpoint will return you a short list of query "hints" that you can suggest to the user to try, even before they've began to type a search query. These are trending queries from a range of content verticals. 
 
 ```java
-        BranchQueryHintRequest request = BranchQueryHintRequest.create();
-        BranchSearch.getInstance().queryHint(request, new IBranchQueryResults() {
+BranchQueryHintRequest request = BranchQueryHintRequest.create();
+BranchSearch.getInstance().queryHint(request, new IBranchQueryHintEvents() {
 
+    @Override
+    public void onBranchQueryHintResult(@NonNull BranchQueryHintResult result) {
+        Log.d("Branch", "QueryHint results: " + result.getHints().toString());
+        queryHints = result.getHints();
+        runOnUiThread(new Runnable() {
             @Override
-            public void onQueryResult(final BranchQueryResult result) {
-                Log.d("Branch", "QueryHint results: " + result.getQueryResults().toString());
-                queryHints = result.getQueryResults();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateQueryHint();
-                    }
-                });
-            }
-
-            @Override
-            public void onError(final BranchSearchError error) {
-                if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
-                    Log.d(TAG, "Branch QueryHint request was canceled.");
-                } else {
-                    // Handle any errors here
-                    Log.d(TAG, "Error for Branch QueryHint. " +
-                            error.getErrorCode() + " " + error.getErrorMsg());
-                }
+            public void run() {
+                updateQueryHint();
             }
         });
+    }
+
+    @Override
+    public void onBranchQueryHintError(@NonNull BranchSearchError error) {
+        if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
+            Log.d(TAG, "Branch QueryHint request was canceled.");
+        } else {
+            // Handle any errors here
+            Log.d(TAG, "Error for Branch QueryHint. " +
+                    error.getErrorCode() + " " + error.getErrorMsg());
+        }
+    }
+});
 
 ```
 
@@ -111,24 +111,24 @@ To educate your users on the value of in-app search, this endpoint will return y
 As a user is typing, Auto Suggest (sometimes referred to as autocomplete) will return a list of query completions that reflet our best predictions for what the user is searching for. We strongly recommend you add Auto Suggest to your UI since it is a critical element of a modern search experience that users now expect.
 
 ```java
-    BranchAutoSuggestRequest request = BranchAutoSuggestRequest.create("pizza");
-    BranchSearch.getInstance().autoSuggest(request, new IBranchQueryResults() {
-                @Override
-                public void onQueryResult(final BranchQueryResult result) {
-                    Log.d("Branch", "onAutoSuggest: " + result.getQueryResults().toString());
-                }
+BranchAutoSuggestRequest request = BranchAutoSuggestRequest.create("pizza");
+BranchSearch.getInstance().autoSuggest(request, new IBranchAutoSuggestEvents() {
+    @Override
+    public void onBranchAutoSuggestResult(@NonNull BranchAutoSuggestResult result) {
+        Log.d("Branch", "onAutoSuggest: " + result.getSuggestions().toString());
+    }
 
-                @Override
-                public void onError(final BranchSearchError error) {
-                    if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
-                        Log.d(TAG, "Branch AutoSuggest request was canceled.");
-                    } else {
-                        // Handle any errors here
-                        Log.d(TAG, "Error for Branch AutoSuggest. " +
-                                error.getErrorCode() + " " + error.getErrorMsg());
-                    }
-                }
-           });
+    @Override
+    public void onBranchAutoSuggestError(@NonNull BranchSearchError error) {
+        if (error.getErrorCode() == BranchSearchError.ERR_CODE.REQUEST_CANCELED) {
+            Log.d(TAG, "Branch AutoSuggest request was canceled.");
+        } else {
+            // Handle any errors here
+            Log.d(TAG, "Error for Branch AutoSuggest. " +
+                    error.getErrorCode() + " " + error.getErrorMsg());
+        }
+    }
+});
 ```
 
 
@@ -144,23 +144,23 @@ For your reference, in `io.branch.search.demo.util.BranchLocationFinder`,
 we have provided example code that fetches the device's last known location. 
 
 ```java
-    // Create a Branch Search Request for the keyword
-    // Implementation Note:  Set the last known location before searching.
-    BranchSearchRequest request = BranchSearchRequest.create(keyword);
+// Create a Branch Search Request for the keyword
+// Implementation Note:  Set the last known location before searching.
+BranchSearchRequest request = BranchSearchRequest.create(keyword);
 
-    // Search for the keyword with the Branch Search SDK
-    BranchSearch.getInstance().query(request, new IBranchSearchEvents() {
-        @Override
-        public void onBranchSearchResult(BranchSearchResult branchSearchResult) {
-            // Update UI with search results. BranchSearchResult contains the result of any search.
-            branchSearchController.onBranchSearchResult(branchSearchResult);
-        }
+// Search for the keyword with the Branch Search SDK
+BranchSearch.getInstance().query(request, new IBranchSearchEvents() {
+    @Override
+    public void onBranchSearchResult(@NonNull BranchSearchResult branchSearchResult) {
+        // Update UI with search results. BranchSearchResult contains the result of any search.
+        branchSearchController.onBranchSearchResult(branchSearchResult);
+    }
 
-        @Override
-        public void onBranchSearchError(BranchSearchError error) {
-            // Handle any search errors here
-        }
-    });
+    @Override
+    public void onBranchSearchError(@NonNull BranchSearchError error) {
+        // Handle any search errors here
+    }
+});
 ```
 
 ### Controlling numbers of results

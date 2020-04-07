@@ -38,7 +38,7 @@ class BranchResponseParser {
 
     static BranchSearchResult parse(BranchSearchRequest query, JSONObject object) {
         String corrected_query = null;
-        if (object.optString(CORRECTED_QUERY_KEY, null) != null) {
+        if (object.has(CORRECTED_QUERY_KEY)) {
             corrected_query = object.optString(CORRECTED_QUERY_KEY);
         }
 
