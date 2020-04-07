@@ -25,6 +25,15 @@ public class BranchQueryHint implements Parcelable {
         return query;
     }
 
+    /**
+     * Returns a search request that will search for this hint's query.
+     * @return a new search request
+     */
+    @NonNull
+    public BranchSearchRequest toSearchRequest() {
+        return BranchSearchRequest.create(this);
+    }
+
     @Override
     public int describeContents() {
         return 0;
