@@ -248,6 +248,7 @@ public class BranchLinkResult implements Parcelable {
      *
      * @param manager a fragment manager
      * @return an error if the deep view could not be opened
+     * @deprecated please use {@link #openDeepView(FragmentManager)} instead
      */
     @SuppressWarnings({"unused", "UnusedReturnValue"})
     @Deprecated

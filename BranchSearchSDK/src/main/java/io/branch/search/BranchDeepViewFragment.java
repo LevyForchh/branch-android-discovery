@@ -56,7 +56,7 @@ import okhttp3.Response;
  * A dialog that can render deepviews.
  * Deepviews are renderer natively without using WebViews.
  */
-public class BranchDeepViewFragment extends DialogFragment {
+public class BranchDeepViewFragment {
 
     public static final String TAG = "BranchDeepViewFragment";
 
@@ -77,6 +77,7 @@ public class BranchDeepViewFragment extends DialogFragment {
         return fragment;
     }
 
+    @Deprecated
     @NonNull
     static android.app.DialogFragment getLegacyInstance(@NonNull BranchLinkResult link) {
         android.app.DialogFragment fragment = new Legacy();
@@ -112,6 +113,7 @@ public class BranchDeepViewFragment extends DialogFragment {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static class Legacy extends android.app.DialogFragment {
         @NonNull
         @Override
