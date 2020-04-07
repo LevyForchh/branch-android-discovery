@@ -24,6 +24,7 @@ import android.support.annotation.DimenRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CircularProgressDrawable;
 import android.text.TextUtils;
@@ -55,7 +56,7 @@ import okhttp3.Response;
  * A dialog that can render deepviews.
  * Deepviews are renderer natively without using WebViews.
  */
-public class BranchDeepViewFragment extends DialogFragment {
+public class BranchDeepViewFragment {
 
     public static final String TAG = "BranchDeepViewFragment";
 
@@ -67,8 +68,8 @@ public class BranchDeepViewFragment extends DialogFragment {
     private static final String APP_ICON_URL_SMALL_SUFFIX = "=s90";
 
     @NonNull
-    static BranchDeepViewFragment getInstance(@NonNull BranchLinkResult link) {
-        BranchDeepViewFragment fragment = new BranchDeepViewFragment();
+    static DialogFragment getInstance(@NonNull BranchLinkResult link) {
+        DialogFragment fragment = new Modern();
         Bundle args = new Bundle();
         args.putParcelable(KEY_LINK, link);
         fragment.setArguments(args);
@@ -76,14 +77,73 @@ public class BranchDeepViewFragment extends DialogFragment {
         return fragment;
     }
 
+    @Deprecated
     @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+    static android.app.DialogFragment getLegacyInstance(@NonNull BranchLinkResult link) {
+        android.app.DialogFragment fragment = new Legacy();
+        Bundle args = new Bundle();
+        args.putParcelable(KEY_LINK, link);
+        fragment.setArguments(args);
+        fragment.setCancelable(true);
+        return fragment;
+    }
+
+    public static class Modern extends DialogFragment {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return createDialog(getContext());
+        }
+
+        @Nullable
+        @Override
+        public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            return inflateHierarchy(inflater, container);
+        }
+
+        @Override
+        public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            setUpHierarchy(view, getArguments(), new Runnable() {
+                @Override
+                public void run() {
+                    dismiss();
+                }
+            });
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    public static class Legacy extends android.app.DialogFragment {
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            return createDialog(getActivity());
+        }
+
+        @Nullable
+        @Override
+        public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            return inflateHierarchy(inflater, container);
+        }
+
+        @Override
+        public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            setUpHierarchy(view, getArguments(), new Runnable() {
+                @Override
+                public void run() {
+                    dismiss();
+                }
+            });
+        }
+    }
+
+    private static Dialog createDialog(@NonNull Context context) {
         // We want to have all the default attributes based on the current runtime Context
         // (light vs. dark, rounded corners, window background, ...) but override a few ones
         // that are defined in the R.style.BranchDeepViewFragment.
         // First, find a good base context: (this is how the Dialog class does it)
-        Context context = getContext();
         final TypedValue value = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.dialogTheme, value, true);
         context = new ContextThemeWrapper(context, value.resourceId);
@@ -92,52 +152,48 @@ public class BranchDeepViewFragment extends DialogFragment {
         // Finally create the dialog:
         Dialog dialog = new Dialog(context, 0);
         // Apply our background:
-        Drawable background = ContextCompat.getDrawable(context,
-                R.drawable.branch_deepview_background);
+        Drawable background = ContextCompat.getDrawable(context, R.drawable.branch_deepview_background);
         //noinspection ConstantConditions
         dialog.getWindow().setBackgroundDrawable(background);
         return dialog;
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    @NonNull
+    private static View inflateHierarchy(@NonNull LayoutInflater inflater,
+                                         @Nullable ViewGroup container) {
         return inflater.inflate(R.layout.branch_deepview, container, false);
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        final BranchLinkResult link = getArguments().getParcelable(KEY_LINK);
+    private static void setUpHierarchy(@NonNull final View root,
+                                       @NonNull Bundle args,
+                                       @NonNull final Runnable dismissRunnable) {
+        final BranchLinkResult link = args.getParcelable(KEY_LINK);
         if (link == null) return; // can't happen
 
         // App name
-        TextView appName = view.findViewById(R.id.branch_deepview_app_name);
+        TextView appName = root.findViewById(R.id.branch_deepview_app_name);
         if (appName != null) loadText(appName, link.getAppName());
 
         // App logo
-        ImageView appIcon = view.findViewById(R.id.branch_deepview_app_icon);
+        ImageView appIcon = root.findViewById(R.id.branch_deepview_app_icon);
         if (appIcon != null) {
             loadImage(appIcon, link.getAppIconUrl(), R.dimen.branch_deepview_app_icon_corners);
         }
 
         // Title
-        TextView title = view.findViewById(R.id.branch_deepview_title);
+        TextView title = root.findViewById(R.id.branch_deepview_title);
         if (title != null) loadText(title, link.getName());
 
         // Description
-        TextView description = view.findViewById(R.id.branch_deepview_description);
+        TextView description = root.findViewById(R.id.branch_deepview_description);
         if (description != null) loadText(description, link.getDescription());
 
         // Extra text
-        TextView extra = view.findViewById(R.id.branch_deepview_extra);
+        TextView extra = root.findViewById(R.id.branch_deepview_extra);
         if (extra != null) loadText(extra, link.deepview_extra_text);
 
         // Image
-        ImageView image = view.findViewById(R.id.branch_deepview_image);
+        ImageView image = root.findViewById(R.id.branch_deepview_image);
         if (image != null) {
             String url = link.getImageUrl();
             if (url != null
@@ -151,15 +207,15 @@ public class BranchDeepViewFragment extends DialogFragment {
         }
 
         // Button
-        Button button = view.findViewById(R.id.branch_deepview_button);
+        Button button = root.findViewById(R.id.branch_deepview_button);
         if (button != null) {
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     String url = PLAY_STORE_APP_URL_PREFIX + link.getDestinationPackageName();
                     Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
-                    dismiss();
+                    root.getContext().startActivity(intent);
+                    dismissRunnable.run();
                 }
             });
         } else {
@@ -167,18 +223,18 @@ public class BranchDeepViewFragment extends DialogFragment {
         }
 
         // Close button
-        View close = view.findViewById(R.id.branch_deepview_close);
+        View close = root.findViewById(R.id.branch_deepview_close);
         if (close != null) {
             close.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    dismiss();
+                    dismissRunnable.run();
                 }
             });
         }
     }
 
-    private void loadText(TextView textView, @Nullable String text) {
+    private static void loadText(@NonNull TextView textView, @Nullable String text) {
         if (TextUtils.isEmpty(text)) {
             textView.setVisibility(View.GONE);
         } else {
@@ -186,17 +242,16 @@ public class BranchDeepViewFragment extends DialogFragment {
         }
     }
 
-    private void loadImage(@NonNull final ImageView imageView,
-                           @Nullable String url,
-                           @DimenRes final int cornersRes) {
-        CircularProgressDrawable progress = new CircularProgressDrawable(getContext());
+    private static void loadImage(@NonNull final ImageView imageView,
+                                  @Nullable String url,
+                                  @DimenRes final int cornersRes) {
+        Context context = imageView.getContext();
+        final Resources resources = context.getResources();
+        CircularProgressDrawable progress = new CircularProgressDrawable(context);
         progress.setArrowEnabled(false);
-        progress.setCenterRadius(getResources()
-                .getDimension(R.dimen.branch_deepview_loading_radius));
-        progress.setStrokeWidth(getResources()
-                .getDimension(R.dimen.branch_deepview_loading_stroke));
-        progress.setColorSchemeColors(ContextCompat.getColor(getContext(),
-                R.color.branch_deepview_loading));
+        progress.setCenterRadius(resources.getDimension(R.dimen.branch_deepview_loading_radius));
+        progress.setStrokeWidth(resources.getDimension(R.dimen.branch_deepview_loading_stroke));
+        progress.setColorSchemeColors(ContextCompat.getColor(context, R.color.branch_deepview_loading));
         progress.start();
         imageView.setImageDrawable(progress);
         HttpUrl httpUrl = url == null ? null : HttpUrl.parse(url);
@@ -230,7 +285,7 @@ public class BranchDeepViewFragment extends DialogFragment {
                             @Override
                             public void run() {
                                 if (cornersRes != 0) {
-                                    float corners = getResources().getDimension(cornersRes);
+                                    float corners = resources.getDimension(cornersRes);
                                     imageView.setImageDrawable(
                                             new RoundedCornersDrawable(bitmap, corners));
                                 } else {

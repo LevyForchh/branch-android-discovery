@@ -10,6 +10,8 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringDef;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 
@@ -234,7 +236,28 @@ public class BranchLinkResult implements Parcelable {
 
         // NOTE: We never return an error, but we might in a future implementation.
         // This also is consistent with openContent(Context, boolean).
-        BranchDeepViewFragment fragment = BranchDeepViewFragment.getInstance(this);
+        DialogFragment fragment = BranchDeepViewFragment.getInstance(this);
+        fragment.show(manager, BranchDeepViewFragment.TAG);
+        return null;
+    }
+
+    /**
+     * Opens the link into a <a href="https://branch.io/deepviews/">Branch Deepview</a>.
+     * The content preview will be rendered inside a native view with the option to
+     * download the app from the play store.
+     *
+     * @param manager a fragment manager
+     * @return an error if the deep view could not be opened
+     * @deprecated please use {@link #openDeepView(FragmentManager)} instead
+     */
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
+    @Deprecated
+    @Nullable
+    public BranchSearchError openDeepView(@NonNull android.app.FragmentManager manager) {
+        // Legacy signature of openDeepView() that uses the old, deprecated FragmentManager,
+        // for ooold apps that do not want to update their activity to FragmentActivity.
+        registerClickEvent();
+        android.app.DialogFragment fragment = BranchDeepViewFragment.getLegacyInstance(this);
         fragment.show(manager, BranchDeepViewFragment.TAG);
         return null;
     }
