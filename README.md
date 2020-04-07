@@ -110,7 +110,7 @@ BranchSearch.getInstance().queryHint(request, new IBranchQueryHintEvents() {
 ### When hints are clicked
 
 When a `BranchQueryHint` object is clicked by the user, you can create a search request by passing
-the hint to `BranchSearchRequest.create(BranchQueryHint)`, or simply use `BranchQueryHint.toSearchRequest()`.
+the hint to `BranchSearchRequest.create(BranchQueryHint)`, or simply use `branchQueryHint.toSearchRequest()`.
 This gives better analytics to Branch and let us improving the service.
 
 ```java
@@ -150,7 +150,7 @@ BranchSearch.getInstance().autoSuggest(request, new IBranchAutoSuggestEvents() {
 ### When suggestions are clicked
 
 When a `BranchAutoSuggestion` object is clicked by the user, you can create a search request by passing
-the hint to `BranchSearchRequest.create(BranchAutoSuggestion)`, or simply use `BranchAutoSuggestion.toSearchRequest()`.
+the hint to `BranchSearchRequest.create(BranchAutoSuggestion)`, or simply use `branchAutoSuggestion.toSearchRequest()`.
 This gives better analytics to Branch and let us improving the service.
 
 ```java
