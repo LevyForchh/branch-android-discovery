@@ -33,7 +33,7 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     /**
      * Deprecated method. Please use {@link #create(String)} instead.
      * @deprecated please use {@link #create(String)} instead
-     * @return a new BranchSearchRequest.
+     * @return a new BranchSearchRequest
      */
     @Deprecated
     @NonNull
@@ -42,13 +42,33 @@ public class BranchSearchRequest extends BranchDiscoveryRequest<BranchSearchRequ
     }
 
     /**
-     * Factory Method to create a new BranchSearchRequest.
+     * Factory method to create a new BranchSearchRequest.
      * @param query Query String to use
-     * @return a new BranchSearchRequest.
+     * @return a new BranchSearchRequest
      */
     @NonNull
     public static BranchSearchRequest create(@NonNull String query) {
         return new BranchSearchRequest(query);
+    }
+
+    /**
+     * Factory method to create a new BranchSearchRequest.
+     * @param hint the hint that triggered this query
+     * @return a new BranchSearchRequest
+     */
+    @NonNull
+    public static BranchSearchRequest create(@NonNull BranchQueryHint hint) {
+        return create(hint.getQuery()).setQuerySource(BranchQuerySource.QUERY_HINT_RESULTS);
+    }
+
+    /**
+     * Factory method to create a new BranchSearchRequest.
+     * @param suggestion the suggestion that triggered this query
+     * @return a new BranchSearchRequest
+     */
+    @NonNull
+    public static BranchSearchRequest create(@NonNull BranchAutoSuggestion suggestion) {
+        return create(suggestion.getQuery()).setQuerySource(BranchQuerySource.AUTOSUGGEST_RESULTS);
     }
 
     private BranchSearchRequest(@NonNull String query) {

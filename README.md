@@ -71,7 +71,7 @@ Once you receive your Branch Discovery API Key, edit your app's manifest file to
 The Branch Discovery SDK needs to be initialized before using any search functionality. The SDK can be initialized anywhere within your application. Ideally should be from the `onCreate()` method of the application class.  Alternatively it can be initialized from the `onCreate()` method of the Activity, however subsequent calls to `init()` will not reinitialize the SDK.
 
 ```java
-     BranchSearch.init(getApplicationContext());
+BranchSearch.init(getApplicationContext());
 ```
 
 ## Hints
@@ -107,6 +107,22 @@ BranchSearch.getInstance().queryHint(request, new IBranchQueryHintEvents() {
 
 ```
 
+### When hints are clicked
+
+When a `BranchQueryHint` object is clicked by the user, you can create a search request by passing
+the hint to `BranchSearchRequest.create(BranchQueryHint)`, or simply use `branchQueryHint.toSearchRequest()`.
+This gives better analytics to Branch and let us improving the service.
+
+```java
+BranchQueryHint clickedHint = ...;
+BranchSearchRequest request = clickedHint.toSearchRequest();
+BranchSearch.getInstance().query(request, ...);
+
+```
+
+The triggered search request can also be created by passing a String, in which case you should make
+sure to call `BranchSearchRequest.setQuerySource(BranchQuerySource.QUERY_HINT_RESULTS)`.
+
 ## Auto Suggest
 As a user is typing, Auto Suggest (sometimes referred to as autocomplete) will return a list of query completions that reflet our best predictions for what the user is searching for. We strongly recommend you add Auto Suggest to your UI since it is a critical element of a modern search experience that users now expect.
 
@@ -131,6 +147,21 @@ BranchSearch.getInstance().autoSuggest(request, new IBranchAutoSuggestEvents() {
 });
 ```
 
+### When suggestions are clicked
+
+When a `BranchAutoSuggestion` object is clicked by the user, you can create a search request by passing
+the hint to `BranchSearchRequest.create(BranchAutoSuggestion)`, or simply use `branchAutoSuggestion.toSearchRequest()`.
+This gives better analytics to Branch and let us improving the service.
+
+```java
+BranchAutoSuggestion clickedSuggestion = ...;
+BranchSearchRequest request = clickedSuggestion.toSearchRequest();
+BranchSearch.getInstance().query(request, ...);
+
+```
+
+The triggered search request can also be created by passing a String, in which case you should make
+sure to call `BranchSearchRequest.setQuerySource(BranchQuerySource.AUTOSUGGEST_RESULTS)`.
 
 ## Search for In-App Content
 

@@ -93,28 +93,16 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     @Override
     public void onKeywordChanged(String keyword) {
         if (!TextUtils.isEmpty(keyword)) {
-            BranchSearch search = BranchSearch.getInstance();
-
             // Obtain the last known location before searching, using mocks if available.
             // NOTE: There's no need to apply it before each query. We do so to support mock
             // locations in this demo app. For real apps, just pass locations to BranchSearch
             // as soon as you get them from your location component!
-            Location location;
-            if (BranchPreferenceActivity.useMockLocation(this)) {
-                location = BranchPreferenceActivity.getMockLocation(this);
-                Log.d(TAG, "Using Mock Location: " + location.toString());
-            } else {
-                location = BranchLocationFinder.getLastKnownLocation();
-            }
-            if (location != null) {
-                search.setLocation(location.getLatitude(), location.getLongitude());
-            }
-
+            applyLocation();
 
             // Create a Branch Search Request for the keyword and
             // search for the keyword with the Branch Search SDK
             BranchSearchRequest request = BranchSearchRequest.create(keyword);
-            search.query(request, new IBranchSearchEvents() {
+            BranchSearch.getInstance().query(request, new IBranchSearchEvents() {
                 @Override
                 public void onBranchSearchResult(@NonNull BranchSearchResult result) {
                     // Update UI with search results. BranchSearchResult contains the result of any search.
@@ -135,7 +123,7 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
 
             // Get Autosuggestions (Log them only)
             BranchAutoSuggestRequest autoSuggestRequest = BranchAutoSuggestRequest.create(keyword);
-            search.autoSuggest(autoSuggestRequest, new IBranchAutoSuggestEvents() {
+            BranchSearch.getInstance().autoSuggest(autoSuggestRequest, new IBranchAutoSuggestEvents() {
                 @Override
                 public void onBranchAutoSuggestResult(@NonNull BranchAutoSuggestResult result) {
                     Log.d("Branch", "onAutoSuggest: " + result.getSuggestions().toString());
@@ -208,8 +196,13 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
     }
 
     private void fetchQueryHints() {
-        BranchQueryHintRequest request = BranchQueryHintRequest.create();
-        request.setMaxResults(6);
+        // Obtain the last known location before searching, using mocks if available.
+        // NOTE: There's no need to apply it before each query. We do so to support mock
+        // locations in this demo app. For real apps, just pass locations to BranchSearch
+        // as soon as you get them from your location component!
+        applyLocation();
+        BranchQueryHintRequest request = BranchQueryHintRequest.create()
+                .setMaxResults(6);
         BranchSearch.getInstance().queryHint(request, new IBranchQueryHintEvents() {
 
             @Override
@@ -235,6 +228,19 @@ public class HomeActivity extends AppCompatActivity implements BFSearchBox.IKeyw
                 }
             }
         });
+    }
+
+    private void applyLocation() {
+        Location location;
+        if (BranchPreferenceActivity.useMockLocation(this)) {
+            location = BranchPreferenceActivity.getMockLocation(this);
+            Log.d(TAG, "Using Mock Location: " + location.toString());
+        } else {
+            location = BranchLocationFinder.getLastKnownLocation();
+        }
+        if (location != null) {
+            BranchSearch.getInstance().setLocation(location.getLatitude(), location.getLongitude());
+        }
     }
 
     private synchronized void updateQueryHint() {
