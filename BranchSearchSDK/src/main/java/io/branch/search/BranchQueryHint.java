@@ -1,11 +1,13 @@
 package io.branch.search;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 /**
  * Represents a single query hint result.
  */
-public class BranchQueryHint {
+public class BranchQueryHint implements Parcelable {
     private final String query;
 
     BranchQueryHint(@NonNull String query) {
@@ -22,4 +24,27 @@ public class BranchQueryHint {
     public String toString() {
         return query;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(query);
+    }
+
+    public final static Creator<BranchQueryHint> CREATOR = new Creator<BranchQueryHint>() {
+        @Override
+        public BranchQueryHint createFromParcel(Parcel source) {
+            //noinspection ConstantConditions
+            return new BranchQueryHint(source.readString());
+        }
+
+        @Override
+        public BranchQueryHint[] newArray(int size) {
+            return new BranchQueryHint[size];
+        }
+    };
 }
