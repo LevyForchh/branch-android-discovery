@@ -1,6 +1,7 @@
 package io.branch.search;
 
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import org.json.JSONArray;
@@ -14,7 +15,7 @@ import java.util.List;
  * Represents results of an auto suggest query started from
  * {@link BranchSearch#autoSuggest(BranchAutoSuggestRequest, IBranchAutoSuggestEvents)}.
  */
-public class BranchAutoSuggestResult {
+public class BranchAutoSuggestResult implements Parcelable {
     private static final String KEY_RESULTS = "results";
 
     private final List<BranchAutoSuggestion> suggestions;
@@ -41,4 +42,28 @@ public class BranchAutoSuggestResult {
         } catch (JSONException ignore) { }
         return new BranchAutoSuggestResult(suggestions);
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(suggestions);
+    }
+
+    public final static Creator<BranchAutoSuggestResult> CREATOR = new Creator<BranchAutoSuggestResult>() {
+        @Override
+        public BranchAutoSuggestResult createFromParcel(Parcel source) {
+            List<BranchAutoSuggestion> suggestions = new ArrayList<>();
+            source.readTypedList(suggestions, BranchAutoSuggestion.CREATOR);
+            return new BranchAutoSuggestResult(suggestions);
+        }
+
+        @Override
+        public BranchAutoSuggestResult[] newArray(int size) {
+            return new BranchAutoSuggestResult[size];
+        }
+    };
 }
