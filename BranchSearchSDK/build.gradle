@@ -87,4 +87,4 @@ task buildBranchSearchArchives(type: Copy) {
     }
 }
 
-apply from: 'https://raw.githubusercontent.com/BranchMetrics/GradleToMavenOptionalDependencies/master/gradle-maven-push.gradle'
+apply from: 'https://raw.githubusercontent.com/BranchMetrics/GradleToMavenOptionalDependencies/master/search-sdk-release-script.gradle'

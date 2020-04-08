@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v1.5.10
+  * _*Master Release*_ - April 7, 2020
+  * Hotfix: change release script so it does not exclude okhttp library
+
 - v1.5.9
   * _*Master Release*_ - April 7, 2020
   * Added ability to set max number of results for hint APIs
