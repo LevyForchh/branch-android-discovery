@@ -1,5 +1,7 @@
 package io.branch.search.linktest;
 
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ManualEntry manualEntry;
     private TextView lastRun;
+    private CheckBox doSuppressExceptions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         manualEntry = new ManualEntry(this);
         lastRun = findViewById(R.id.lastRunValue);
+        doSuppressExceptions = findViewById(R.id.doSuppressExceptions);
 
         // Initialize the Branch Search SDK
         BranchSearch searchSDK = BranchSearch.init(getApplicationContext());
@@ -54,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new Link("com.android.vending", null, null, "https://play.google.com/store/apps/top"),
                 // YOUTUBE
                 new Link("com.google.android.youtube", "search-shortcut", null, null),
+                new Link("com.google.android.youtube", null, null, "https://uber.com"),
                 // Spotify
                 new Link("com.spotify.music", "search", null, null),
                 // UBER
@@ -88,6 +94,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 manualEntry.forceUpdate(item);
             }
         });
+    }
+
+    public void startActivityForResult(Intent intent, int requestCode, Bundle bundle) {
+        if (doSuppressExceptions.isChecked()) {
+            try {
+                super.startActivityForResult(intent, requestCode, bundle);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(getApplicationContext(), "Activity not found!", Toast.LENGTH_SHORT).show();
+            } catch (SecurityException e) {
+                Toast.makeText(getApplicationContext(), "Security error!", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            super.startActivityForResult(intent, requestCode, bundle);
+        }
     }
 
     @Override

@@ -61,19 +61,20 @@
 
                 <Button
                     android:id="@+id/openContent"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="10"
                     android:background="@color/button_background"
                     android:text="Open"
                     android:textColor="@color/button_text" />
 
                 <CheckBox
-                    android:id="@+id/isPlaystoreFallback"
+                    android:id="@+id/doSuppressExceptions"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Empty web links fallback to the playstore"
-                    android:visibility="gone" />
+                    android:text="Suppress exceptions"
+                    android:visibility="visible" />
             </LinearLayout>
 
             <LinearLayout
