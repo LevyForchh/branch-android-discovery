@@ -176,7 +176,7 @@ public class BranchAppResult implements Parcelable {
 
     @SuppressWarnings("unused")
     @Nullable
-    static BranchAppResult createFromJson(@NonNull String requestId, @NonNull JSONObject json) {
+    static BranchAppResult createFromJson(@NonNull JSONObject json) {
 
         // Parse fields and check if installed
         String name = Util.optString(json, KEY_APP_NAME);

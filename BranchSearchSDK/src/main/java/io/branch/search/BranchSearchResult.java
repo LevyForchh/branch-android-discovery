@@ -70,11 +70,10 @@ public class BranchSearchResult {
         if (json.optBoolean(KEY_SUCCESS)) {
             JSONArray resultsJson = json.optJSONArray(KEY_RESULTS);
             if (resultsJson != null) {
-                String requestId = Util.optString(json, KEY_REQUEST_ID);
                 for (int i = 0; i < resultsJson.length(); i++) {
                     JSONObject resultJson = resultsJson.optJSONObject(i);
                     if (resultJson == null) continue;
-                    BranchAppResult result = BranchAppResult.createFromJson(requestId, resultJson);
+                    BranchAppResult result = BranchAppResult.createFromJson(resultJson);
                     if (result != null) {
                         results.add(result);
                     }
