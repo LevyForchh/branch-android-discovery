@@ -32,7 +32,7 @@ public class BranchSearchResultTest extends BranchTest {
         JSONObject jsonResponse = new JSONObject(response);
 
         BranchSearchRequest request = BranchSearchRequest.create("Mexican");
-        BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
+        BranchSearchResult result = BranchSearchResult.createFromJson(request, jsonResponse);
         Assert.assertNotNull(result);
 
         // Check to see if there is some expected information in the result.
@@ -52,7 +52,7 @@ public class BranchSearchResultTest extends BranchTest {
         JSONObject jsonResponse = new JSONObject(response);
 
         BranchSearchRequest request = BranchSearchRequest.create("Mexican");
-        BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
+        BranchSearchResult result = BranchSearchResult.createFromJson(request, jsonResponse);
         Assert.assertNotNull(result);
 
         // This has no App Results.
@@ -68,7 +68,7 @@ public class BranchSearchResultTest extends BranchTest {
         JSONObject jsonResponse = new JSONObject(response);
 
         BranchSearchRequest request = BranchSearchRequest.create("Mexican");
-        BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
+        BranchSearchResult result = BranchSearchResult.createFromJson(request, jsonResponse);
         Assert.assertNotNull(result);
 
         // This has One App Result, but nothing inside.
@@ -81,7 +81,7 @@ public class BranchSearchResultTest extends BranchTest {
     public void testResultSuccess_empty3() {
         // Parse with an empty JSONObject
         BranchSearchRequest request = BranchSearchRequest.create("Mexican");
-        BranchSearchResult result = BranchResponseParser.parse(request, new JSONObject());
+        BranchSearchResult result = BranchSearchResult.createFromJson(request, new JSONObject());
         Assert.assertNotNull(result);
     }
 
@@ -93,7 +93,7 @@ public class BranchSearchResultTest extends BranchTest {
         JSONObject jsonResponse = new JSONObject(response);
 
         BranchSearchRequest request = BranchSearchRequest.create("Mexican");
-        BranchSearchResult result = BranchResponseParser.parse(request, jsonResponse);
+        BranchSearchResult result = BranchSearchResult.createFromJson(request, jsonResponse);
         Assert.assertNotNull(result);
 
         // Since results have no app id, the "not installed" filter will remove them

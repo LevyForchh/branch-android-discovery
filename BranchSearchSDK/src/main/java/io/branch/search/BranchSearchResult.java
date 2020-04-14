@@ -3,6 +3,9 @@ package io.branch.search;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,13 +13,22 @@ import java.util.List;
  * Branch Search results.
  */
 public class BranchSearchResult {
+
+    private static final String KEY_REQUEST_ID = "request_id";
+    private static final String KEY_RESULTS = "results";
+    private static final String KEY_SUCCESS = "success";
+    private static final String KEY_CORRECTED_QUERY = "search_query_string";
+
     private final BranchSearchRequest query;
     private final String correctedQuery;
-    final List<BranchAppResult> results = new ArrayList<>();
+    private final List<BranchAppResult> results;
 
-    BranchSearchResult(@NonNull BranchSearchRequest query, @Nullable String correctedQuery) {
+    private BranchSearchResult(@NonNull BranchSearchRequest query,
+                               @Nullable String correctedQuery,
+                               @NonNull List<BranchAppResult> results) {
         this.query = query;
         this.correctedQuery = correctedQuery;
+        this.results = results;
     }
 
     /**
@@ -39,5 +51,36 @@ public class BranchSearchResult {
     @NonNull
     public List<BranchAppResult> getResults() {
         return this.results;
+    }
+
+    /**
+     * Parses a {@link BranchSearchResult} from JSON object.
+     * @param query original query
+     * @param json json object
+     * @return a result
+     */
+    @NonNull
+    static BranchSearchResult createFromJson(@NonNull BranchSearchRequest query,
+                                             @NonNull JSONObject json) {
+        String correctedQuery = null;
+        if (json.has(KEY_CORRECTED_QUERY)) {
+            correctedQuery = json.optString(KEY_CORRECTED_QUERY);
+        }
+        List<BranchAppResult> results = new ArrayList<>();
+        if (json.optBoolean(KEY_SUCCESS)) {
+            JSONArray resultsJson = json.optJSONArray(KEY_RESULTS);
+            if (resultsJson != null) {
+                String requestId = Util.optString(json, KEY_REQUEST_ID);
+                for (int i = 0; i < resultsJson.length(); i++) {
+                    JSONObject resultJson = resultsJson.optJSONObject(i);
+                    if (resultJson == null) continue;
+                    BranchAppResult result = BranchAppResult.createFromJson(requestId, resultJson);
+                    if (result != null) {
+                        results.add(result);
+                    }
+                }
+            }
+        }
+        return new BranchSearchResult(query, correctedQuery, results);
     }
 }

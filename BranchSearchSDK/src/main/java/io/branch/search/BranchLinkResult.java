@@ -20,6 +20,7 @@ import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Iterator;
 
 /**
  * Class for representing a a deep link to content
@@ -416,36 +417,60 @@ public class BranchLinkResult implements Parcelable {
     }
 
     @SuppressLint("NewApi")
-    @NonNull
-    static BranchLinkResult createFromJson(@NonNull JSONObject actionJson,
+    @Nullable
+    static BranchLinkResult createFromJson(@NonNull JSONObject json,
                                            @NonNull String appName,
-                                           @NonNull String appStoreId,
+                                           @NonNull String appPackageName,
                                            @NonNull String appIconUrl,
-                                           @NonNull String appDeepviewExtraText) {
+                                           @NonNull String appDeepviewExtraText,
+                                           boolean appIsInstalled) {
         BranchLinkResult link = new BranchLinkResult();
-        link.entity_id = Util.optString(actionJson, LINK_ENTITY_ID_KEY);
-        link.type = Util.optString(actionJson, LINK_TYPE_KEY);
-        link.score = (float)actionJson.optDouble(LINK_SCORE_KEY);
+        link.entity_id = Util.optString(json, LINK_ENTITY_ID_KEY);
+        link.type = Util.optString(json, LINK_TYPE_KEY);
+        link.score = (float)json.optDouble(LINK_SCORE_KEY);
 
-        link.name = Util.optString(actionJson, LINK_NAME_KEY);
-        link.description = Util.optString(actionJson, LINK_DESC_KEY);
-        link.image_url = Util.optString(actionJson, LINK_IMAGE_URL_KEY);
+        link.name = Util.optString(json, LINK_NAME_KEY);
+        link.description = Util.optString(json, LINK_DESC_KEY);
+        link.image_url = Util.optString(json, LINK_IMAGE_URL_KEY);
         link.app_name = appName;
         link.app_icon_url = appIconUrl;
-        link.ranking_hint = Util.optString(actionJson, LINK_RANKING_HINT_KEY);
-        link.metadata = actionJson.optJSONObject(LINK_METADATA_KEY);
+        link.ranking_hint = Util.optString(json, LINK_RANKING_HINT_KEY);
+        link.metadata = json.optJSONObject(LINK_METADATA_KEY);
         if (link.metadata == null) link.metadata = new JSONObject();
 
-        link.routing_mode = Util.optString(actionJson, LINK_ROUTING_MODE_KEY);
-        link.uri_scheme = Util.optString(actionJson, LINK_URI_SCHEME_KEY);
-        link.web_link = Util.optString(actionJson, LINK_WEB_LINK_KEY);
-        link.destination_store_id = appStoreId;
+        link.routing_mode = Util.optString(json, LINK_ROUTING_MODE_KEY);
+        link.uri_scheme = Util.optString(json, LINK_URI_SCHEME_KEY);
+        link.web_link = Util.optString(json, LINK_WEB_LINK_KEY);
+        link.destination_store_id = appPackageName;
 
-        link.click_tracking_url = Util.optString(actionJson, LINK_TRACKING_KEY);
-        link.android_shortcut_id = Util.optString(actionJson, LINK_ANDROID_SHORTCUT_ID_KEY);
-        link.icon_category = actionJson.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
-        link.deepview_extra_text = actionJson.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY,
+        link.click_tracking_url = Util.optString(json, LINK_TRACKING_KEY);
+        link.android_shortcut_id = Util.optString(json, LINK_ANDROID_SHORTCUT_ID_KEY);
+        link.icon_category = json.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
+        link.deepview_extra_text = json.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY,
                 appDeepviewExtraText);
+
+        // Now that we have parsed the JSON, filter ourselves out if needed.
+        // Remove invalid shortcuts
+        String shortcutId = link.getAndroidShortcutId();
+        if (shortcutId != null) { // Need to validate
+            Context context = BranchSearch.getInstance().getApplicationContext();
+            IBranchShortcutHandler handler = BranchSearch.getInstance()
+                    .getBranchConfiguration()
+                    .getShortcutHandler();
+            if (!handler.validateShortcut(context, shortcutId, appPackageName)) {
+                return null;
+            }
+        }
+        // If app not installed, remove non http(s)/android-app.
+        if (!appIsInstalled) {
+            boolean isWeb = !TextUtils.isEmpty(link.web_link);
+            boolean isPlayStore = link.getUriScheme() != null
+                    && link.getUriScheme().startsWith("android-app://");
+            if (!isWeb && !isPlayStore) {
+                return null;
+            }
+        }
+
         return link;
     }
 
