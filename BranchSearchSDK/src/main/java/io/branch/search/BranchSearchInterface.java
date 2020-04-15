@@ -51,7 +51,7 @@ class BranchSearchInterface {
                     } else if (isError) {
                         callback.onBranchSearchError((BranchSearchError) response);
                     } else {
-                        callback.onBranchSearchResult(BranchResponseParser.parse(request, response));
+                        callback.onBranchSearchResult(BranchSearchResult.createFromJson(request, response));
                     }
                 }
             }

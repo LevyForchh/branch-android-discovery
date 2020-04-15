@@ -1,11 +1,18 @@
 package io.branch.search;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -13,6 +20,15 @@ import java.util.List;
  * Contains enough information to open the app or fall back to the play store.
  */
 public class BranchAppResult implements Parcelable {
+    private static final String KEY_APP_NAME = "app_name";
+    private static final String KEY_APP_STORE_ID = "app_store_id";
+    private static final String KEY_APP_ICON_URL = "app_icon_url";
+    private static final String KEY_APP_SCORE = "score";
+    private static final String KEY_APP_DEEP_LINKS = "deep_links";
+    private static final String KEY_RANKING_HINT = "ranking_hint";
+    private static final String KEY_NOT_INSTALLED_MAX_RESULTS = "not_installed_max_results";
+    private static final String KEY_DEEPVIEW_EXTRA_TEXT = "deepview_extra_text";
+
     private final String app_store_id;
     private final String app_name;
     private final String app_icon_url;
@@ -141,6 +157,7 @@ public class BranchAppResult implements Parcelable {
      * @return BranchSearchError {@link BranchSearchError} object to pass any error with complete action. Null if succeeded.
      * @deprecated the search deep link, if available, will be among other link results for this app
      */
+    @Deprecated
     public BranchSearchError openSearchDeepLink(Context context, boolean fallbackToPlayStore) {
         return openApp(context, fallbackToPlayStore);
     }
@@ -155,6 +172,52 @@ public class BranchAppResult implements Parcelable {
     @Deprecated
     public boolean isSearchDeepLinkAvailable() {
         return false;
+    }
+
+    @SuppressWarnings("unused")
+    @Nullable
+    static BranchAppResult createFromJson(@NonNull JSONObject json) {
+
+        // Parse fields and check if installed
+        String name = Util.optString(json, KEY_APP_NAME);
+        String packageName = Util.optString(json, KEY_APP_STORE_ID);
+        String iconUrl = Util.optString(json, KEY_APP_ICON_URL);
+        float score = (float) json.optDouble(KEY_APP_SCORE, 0.0);
+        String rankingHint = Util.optString(json, KEY_RANKING_HINT);
+        String deepviewExtraText = Util.optString(json, KEY_DEEPVIEW_EXTRA_TEXT);
+        Context appContext = BranchSearch.getInstance().getApplicationContext();
+        boolean isInstalled = Util.isAppInstalled(appContext, packageName);
+
+        // Parse deep links
+        JSONArray linksJson = json.optJSONArray(KEY_APP_DEEP_LINKS);
+        List<BranchLinkResult> links = new ArrayList<>();
+        if (linksJson != null) {
+            for (int j = 0; j < linksJson.length(); j++) {
+                BranchLinkResult link = BranchLinkResult.createFromJson(
+                        linksJson.optJSONObject(j),
+                        name,
+                        packageName,
+                        iconUrl,
+                        deepviewExtraText,
+                        isInstalled);
+                if (link != null) {
+                    links.add(link);
+                }
+            }
+        }
+
+        // Apply the max results constraint
+        // If nothing remains, this app should disappear
+        if (!isInstalled) {
+            int maxResults = json.optInt(KEY_NOT_INSTALLED_MAX_RESULTS, Integer.MAX_VALUE);
+            int max = Math.min(maxResults, links.size());
+            links = links.subList(0, max);
+        }
+        if (links.isEmpty()) {
+            return null;
+        } else {
+            return new BranchAppResult(packageName, name, iconUrl, rankingHint, score, links);
+        }
     }
 }
 
