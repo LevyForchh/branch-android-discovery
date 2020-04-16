@@ -390,6 +390,10 @@ public class BranchLinkResult implements Parcelable {
                 Uri uri = Uri.parse(webLink);
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(uri);
+                int intentFlags = BranchSearch.getInstance()
+                        .getBranchConfiguration()
+                        .getLaunchIntentFlags();
+                intent.setFlags(intentFlags);
                 if (forcePackage) {
                     boolean isPlayStore = PLAY_STORE_URI_HOST.equals(uri.getHost());
                     if (isPlayStore && hasPlayStore) {
