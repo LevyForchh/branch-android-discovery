@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- v1.5.11
+  * _*Master Release*_ - April 16, 2020
+  * Ensure intent flags are respected whenever starting a new Activity
+
 - v1.5.10
   * _*Master Release*_ - April 7, 2020
   * Hotfix: change release script so it does not exclude okhttp library
