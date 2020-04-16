@@ -103,36 +103,43 @@ class Util {
     static boolean openApp(Context context, boolean fallbackToPlayStore, String destinationStoreID) {
         if (!TextUtils.isEmpty(destinationStoreID)) {
             try {
-                Intent LaunchIntent = context.getPackageManager().getLaunchIntentForPackage(destinationStoreID);
-                context.startActivity(LaunchIntent);
-            } catch (Exception ignore1) {
+                Intent intent = context.getPackageManager().getLaunchIntentForPackage(destinationStoreID);
+                int intentFlags = BranchSearch.getInstance()
+                        .getBranchConfiguration()
+                        .getLaunchIntentFlags();
+                intent.setFlags(intentFlags);
+                context.startActivity(intent);
+                return true;
+            } catch (Exception e) {
                 if (fallbackToPlayStore) {
-                    openAppInPlayStore(context, destinationStoreID);
+                    return openAppInPlayStore(context, destinationStoreID);
                 }
             }
-            return true;
         }
         return false;
     }
 
     static boolean openAppInPlayStore(Context context, String destinationStoreID) {
-        boolean tryOpenApp = false;
         if (!TextUtils.isEmpty(destinationStoreID)) {
-            try {
-                context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=" + destinationStoreID)));
-                tryOpenApp = true;
-            } catch (ActivityNotFoundException ignore) {
-            }
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            int intentFlags = BranchSearch.getInstance()
+                    .getBranchConfiguration()
+                    .getLaunchIntentFlags();
+            intent.setFlags(intentFlags);
 
-            if (!tryOpenApp) {
-                try {
-                    context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=" + destinationStoreID)));
-                    tryOpenApp = true;
-                } catch (ActivityNotFoundException ignore) {
-                }
-            }
+            try {
+                intent.setData(Uri.parse("market://details?id=" + destinationStoreID));
+                context.startActivity(intent);
+                return true;
+            } catch (ActivityNotFoundException ignore) { }
+
+            try {
+                intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=" + destinationStoreID));
+                context.startActivity(intent);
+                return true;
+            } catch (ActivityNotFoundException ignore) { }
         }
-        return tryOpenApp;
+        return false;
     }
 
     static boolean isAppInstalled(@NonNull Context context, @NonNull String packageName) {
