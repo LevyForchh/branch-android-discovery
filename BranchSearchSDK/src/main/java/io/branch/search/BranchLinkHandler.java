@@ -7,11 +7,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 abstract class BranchLinkHandler implements Parcelable {
@@ -23,6 +26,8 @@ abstract class BranchLinkHandler implements Parcelable {
             case "view_intent": return new ViewIntent(payload);
             case "launch_intent": return new LaunchIntent(payload);
             case "shortcut": return new Shortcut(payload);
+            case "test_installed": return new TestInstalled(payload);
+            case "test_not_installed": return new TestNotInstalled(payload);
             default: throw new JSONException("Unknown type!");
         }
     }
@@ -190,6 +195,82 @@ abstract class BranchLinkHandler implements Parcelable {
                     .getBranchConfiguration()
                     .getShortcutHandler();
             return handler.launchShortcut(context, id, appPackageName);
+        }
+    }
+
+    /**
+     * Abstract handler that contains other handlers inside.
+     */
+    private abstract static class Wrapper extends BranchLinkHandler {
+        private final static String KEY_HANDLERS = "links";
+
+        private final List<BranchLinkHandler> handlers = new ArrayList<>();
+
+        protected Wrapper(@NonNull JSONObject payload) throws JSONException {
+            super(payload);
+            JSONArray array = payload.getJSONArray(KEY_HANDLERS);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject handler = array.getJSONObject(i);
+                handlers.add(BranchLinkHandler.from(handler));
+            }
+        }
+
+        @Override
+        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+            for (BranchLinkHandler handler : handlers) {
+                if (handler.validate(context, appPackageName)) return true;
+            }
+            return false;
+        }
+
+        @Override
+        boolean open(@NonNull Context context, @NonNull String appPackageName) {
+            for (BranchLinkHandler handler : handlers) {
+                if (handler.open(context, appPackageName)) return true;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * A {@link Wrapper} that tests that the target package is installed before
+     * passing the action to wrapped handlers.
+     */
+    private static class TestInstalled extends Wrapper {
+        private final static String KEY_PACKAGE = "package";
+
+        private final String packageName;
+
+        private TestInstalled(@NonNull JSONObject payload) throws JSONException {
+            super(payload);
+            packageName = payload.getString(KEY_PACKAGE);
+        }
+
+        @Override
+        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+            if (!Util.isAppInstalled(context, packageName)) return false;
+            return super.validate(context, appPackageName);
+        }
+    }
+
+    /**
+     * A {@link Wrapper} that tests that the target package is not installed before
+     * passing the action to wrapped handlers.
+     */
+    private static class TestNotInstalled extends Wrapper {
+        private final static String KEY_PACKAGE = "package";
+
+        private final String packageName;
+
+        private TestNotInstalled(@NonNull JSONObject payload) throws JSONException {
+            super(payload);
+            packageName = payload.getString(KEY_PACKAGE);
+        }
+
+        @Override
+        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+            if (Util.isAppInstalled(context, packageName)) return false;
+            return super.validate(context, appPackageName);
         }
     }
 }

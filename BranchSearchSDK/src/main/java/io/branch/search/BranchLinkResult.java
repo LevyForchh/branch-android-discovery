@@ -297,7 +297,9 @@ public class BranchLinkResult implements Parcelable {
         registerClickEvent();
         boolean open = false;
         for (BranchLinkHandler handler : handlers) {
-            open = handler.open(context, destination_store_id);
+            // let's validate again before opening: something might have changed.
+            open = handler.validate(context, destination_store_id)
+                    && handler.open(context, destination_store_id);
             if (open) break;
         }
         if (open) {
