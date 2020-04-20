@@ -198,8 +198,7 @@ public class BranchAppResult implements Parcelable {
                         name,
                         packageName,
                         iconUrl,
-                        deepviewExtraText,
-                        isInstalled);
+                        deepviewExtraText);
                 if (link != null) {
                     links.add(link);
                 }
