@@ -349,7 +349,7 @@ abstract class BranchLinkHandler implements Parcelable {
         private final static String KEY_DESCRIPTION = "description";
         private final static String KEY_IMAGE_URL = "image_url";
         // TODO cta text ?
-        // TODO put deepview_extra_text here instead of link ?
+        // TODO put deepview_extra_text here instead of link level ?
 
         private final String imageUrl;
         private final String title;
