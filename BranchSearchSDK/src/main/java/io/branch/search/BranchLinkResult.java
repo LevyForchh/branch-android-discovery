@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -64,10 +65,6 @@ public class BranchLinkResult implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     public @interface IconCategory {}
 
-    private static final String ANDROID_APP_URI_SCHEME = "android-app";
-    private static final String PLAY_STORE_URI_HOST = "play.google.com";
-    private static final String PLAY_STORE_PACKAGE_NAME = "com.android.vending";
-
     private static final String LINK_ENTITY_ID_KEY = "entity_id";
     private static final String LINK_TYPE_KEY = "type";
     private static final String LINK_SCORE_KEY = "score";
@@ -96,7 +93,7 @@ public class BranchLinkResult implements Parcelable {
     private String destination_store_id;
     private String click_tracking_url;
     private String icon_category;
-    String deepview_extra_text; /* read by BranchDeepViewFragment */
+    String deepview_extra_text; /* read by BranchLinkHandler.DeepView */
     private final List<BranchLinkHandler> handlers = new ArrayList<>();
 
     private BranchLinkResult() {
@@ -236,17 +233,19 @@ public class BranchLinkResult implements Parcelable {
      *
      * @param manager a fragment manager
      * @return an error if the deep view could not be opened
+     * @deprecated deepviews are now opened automatically with {@link #open(Context)}
      */
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
+    @Deprecated
     @Nullable
     public BranchSearchError openDeepView(@NonNull FragmentManager manager) {
         registerClickEvent();
-
-        // NOTE: We never return an error, but we might in a future implementation.
-        // This also is consistent with openContent(Context, boolean).
-        DialogFragment fragment = BranchDeepViewFragment.getInstance(this);
-        fragment.show(manager, BranchDeepViewFragment.TAG);
-        return null;
+        try {
+            BranchDeepViewFragment fragment = createDeepViewFragmentForLegacyAPIs();
+            fragment.getInstance().show(manager, BranchDeepViewFragment.TAG);
+            return null;
+        } catch (JSONException e) {
+            return new BranchSearchError(BranchSearchError.ERR_CODE.NOT_SUPPORTED_ERROR);
+        }
     }
 
     /**
@@ -256,18 +255,37 @@ public class BranchLinkResult implements Parcelable {
      *
      * @param manager a fragment manager
      * @return an error if the deep view could not be opened
-     * @deprecated please use {@link #openDeepView(FragmentManager)} instead
+     * @deprecated deepviews are now opened automatically with {@link #open(Context)}
      */
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
     @Deprecated
     @Nullable
     public BranchSearchError openDeepView(@NonNull android.app.FragmentManager manager) {
         // Legacy signature of openDeepView() that uses the old, deprecated FragmentManager,
         // for ooold apps that do not want to update their activity to FragmentActivity.
         registerClickEvent();
-        android.app.DialogFragment fragment = BranchDeepViewFragment.getLegacyInstance(this);
-        fragment.show(manager, BranchDeepViewFragment.TAG);
-        return null;
+        try {
+            BranchDeepViewFragment fragment = createDeepViewFragmentForLegacyAPIs();
+            fragment.getLegacyInstance().show(manager, BranchDeepViewFragment.TAG);
+            return null;
+        } catch (JSONException e) {
+            return new BranchSearchError(BranchSearchError.ERR_CODE.NOT_SUPPORTED_ERROR);
+        }
+    }
+
+    // To still support openDeepView() (deprecated) we must be able to emulate the pre-1.6.0 behavior:
+    // it had a single action that would just open the play store page for this package.
+    // This method creates a BranchDeepViewFragment with this information.
+    // The modern way of doing this is in BranchLinkResult.DeepView.
+    @Deprecated
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
+    private BranchDeepViewFragment createDeepViewFragmentForLegacyAPIs() throws JSONException {
+        JSONObject intent = new JSONObject();
+        intent.put("@type", "view_intent");
+        intent.put("data", "https://play.google.com/store/apps/details?id="
+                + getDestinationPackageName());
+        List<BranchLinkHandler> handlers = Arrays.asList(BranchLinkHandler.from(intent));
+        return new BranchDeepViewFragment(this, handlers, getName(), getDescription(),
+                getImageUrl(), deepview_extra_text);
     }
 
     /**
@@ -278,7 +296,7 @@ public class BranchLinkResult implements Parcelable {
      * @param context             Application context
      * @param fallbackToPlayStore If set to {@code true} fallbacks to the Google play if the app is not installed and there is no valid web url.
      * @return BranchSearchError {@link BranchSearchError} object to pass any error with complete action. Null if succeeded.
-     * @deprecated use {@link #open(Context)}
+     * @deprecated please use {@link #open(Context)}
      */
     @Deprecated
     @SuppressWarnings("UnusedReturnValue")
@@ -288,7 +306,21 @@ public class BranchLinkResult implements Parcelable {
     }
 
     /**
-     * Opens this link.
+     * Opens this link. Links can be opened in different ways - Branch SDK will determine
+     * what's best by checking the device state, for example to see if the target app is installed
+     * or not.
+     *
+     * To support all the possible options, it is recommended that you pass an Activity context
+     * here: deep views, for instance, will try to find a FragmentManager from the context.
+     * If you can't pass an Activity context but still want to open the deep view fragment,
+     * you can register a {@link IBranchDeepViewHandler} from
+     * {@link BranchConfiguration#setDeepViewHandler(IBranchDeepViewHandler)}.
+     *
+     * Other options, like links based on shortcut results, will need the current app to have
+     * default launcher permissions. If you don't have default launcher permissions but still
+     * want to try to open shortcuts, you can register a {@link IBranchShortcutHandler} from
+     * {@link BranchConfiguration#setShortcutHandler(IBranchShortcutHandler)}.
+     *
      * @param context a context
      * @return An error if something went wrong. Null if succeeded.
      */
@@ -298,8 +330,8 @@ public class BranchLinkResult implements Parcelable {
         boolean open = false;
         for (BranchLinkHandler handler : handlers) {
             // let's validate again before opening: something might have changed.
-            open = handler.validate(context, destination_store_id)
-                    && handler.open(context, destination_store_id);
+            open = handler.validate(context, this)
+                    && handler.open(context, this);
             if (open) break;
         }
         if (open) {
@@ -353,7 +385,7 @@ public class BranchLinkResult implements Parcelable {
         Context context = BranchSearch.getInstance().getApplicationContext();
         boolean canHandle = false;
         for (BranchLinkHandler handler : link.handlers) {
-            if (handler.validate(context, appPackageName)) {
+            if (handler.validate(context, link)) {
                 canHandle = true;
                 break;
             }

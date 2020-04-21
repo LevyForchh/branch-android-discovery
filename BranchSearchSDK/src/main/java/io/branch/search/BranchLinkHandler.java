@@ -17,30 +17,39 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Abstract class that represents Link Handling v2 concepts. Both opening methods
+ * and scoping rules will be instances of a {@link BranchLinkHandler}.
+ *
+ * Handlers can contain other handlers inside: see {@link Wrapper}.
+ * In this case validation and opening functions will forward the event to children.
+ */
 abstract class BranchLinkHandler implements Parcelable {
 
     @NonNull
     static BranchLinkHandler from(@NonNull JSONObject payload) throws JSONException {
         String type = payload.getString("@type");
         switch (type) {
-            case "view_intent": return new ViewIntent(payload);
-            case "launch_intent": return new LaunchIntent(payload);
-            case "shortcut": return new Shortcut(payload);
-            case "test_installed": return new TestInstalled(payload);
-            case "test_not_installed": return new TestNotInstalled(payload);
+            case ViewIntent.TYPE: return new ViewIntent(payload);
+            case LaunchIntent.TYPE: return new LaunchIntent(payload);
+            case Shortcut.TYPE: return new Shortcut(payload);
+            case TestInstalled.TYPE: return new TestInstalled(payload);
+            case TestNotInstalled.TYPE: return new TestNotInstalled(payload);
+            case DeepView.TYPE: return new DeepView(payload);
             default: throw new JSONException("Unknown type!");
         }
     }
 
     private final String payloadString;
 
+    @SuppressWarnings("WeakerAccess")
     protected BranchLinkHandler(@NonNull JSONObject payload) {
         payloadString = payload.toString();
     }
 
-    abstract boolean validate(@NonNull Context context, @NonNull String appPackageName);
+    abstract boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent);
 
-    abstract boolean open(@NonNull Context context, @NonNull String appPackageName);
+    abstract boolean open(@NonNull Context context, @NonNull BranchLinkResult parent);
 
     @Override
     public final void writeToParcel(Parcel dest, int flags) {
@@ -72,6 +81,7 @@ abstract class BranchLinkHandler implements Parcelable {
      * The view_intent handler, opening an Uri and optionally forcing the target package.
      */
     private static class ViewIntent extends BranchLinkHandler {
+        private final static String TYPE = "view_intent";
         private final static String KEY_DATA = "data";
         private final static String KEY_TARGET = "forcePackage";
         private final static String KEY_EXTRAS = "extras";
@@ -95,7 +105,7 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
             if (target != null && !Util.isAppInstalled(context, target)) return false;
             Intent intent = new Intent(Intent.ACTION_VIEW, data);
             if (target != null) intent.setPackage(target); // no need to add extras here.
@@ -103,7 +113,7 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean open(@NonNull Context context, @NonNull String appPackageName) {
+        boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
             Intent intent = new Intent(Intent.ACTION_VIEW, data);
             if (target != null) intent.setPackage(target);
             for (String extra : extras.keySet()) {
@@ -126,6 +136,7 @@ abstract class BranchLinkHandler implements Parcelable {
      * {@link android.content.pm.PackageManager#getLaunchIntentForPackage(String)}.
      */
     private static class LaunchIntent extends BranchLinkHandler {
+        private final static String TYPE = "launch_intent";
         private final static String KEY_EXTRAS = "extras";
 
         private final Map<String, String> extras = new HashMap<>();
@@ -143,12 +154,14 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            String appPackageName = parent.getDestinationPackageName();
             return context.getPackageManager().getLaunchIntentForPackage(appPackageName) != null;
         }
 
         @Override
-        boolean open(@NonNull Context context, @NonNull String appPackageName) {
+        boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            String appPackageName = parent.getDestinationPackageName();
             Intent intent = context.getPackageManager().getLaunchIntentForPackage(appPackageName);
             if (intent == null) return false; // App uninstalled after validation!
             for (String extra : extras.keySet()) {
@@ -172,6 +185,7 @@ abstract class BranchLinkHandler implements Parcelable {
      * This actually delegates everything to the public {@link IBranchShortcutHandler}.
      */
     private static class Shortcut extends BranchLinkHandler {
+        private final static String TYPE = "shortcut";
         private final static String KEY_ID = "id";
 
         private final String id;
@@ -182,7 +196,8 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            String appPackageName = parent.getDestinationPackageName();
             IBranchShortcutHandler handler = BranchSearch.getInstance()
                     .getBranchConfiguration()
                     .getShortcutHandler();
@@ -190,7 +205,8 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean open(@NonNull Context context, @NonNull String appPackageName) {
+        boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            String appPackageName = parent.getDestinationPackageName();
             IBranchShortcutHandler handler = BranchSearch.getInstance()
                     .getBranchConfiguration()
                     .getShortcutHandler();
@@ -201,10 +217,11 @@ abstract class BranchLinkHandler implements Parcelable {
     /**
      * Abstract handler that contains other handlers inside.
      */
+    @SuppressWarnings("WeakerAccess")
     private abstract static class Wrapper extends BranchLinkHandler {
         private final static String KEY_HANDLERS = "links";
 
-        private final List<BranchLinkHandler> handlers = new ArrayList<>();
+        protected final List<BranchLinkHandler> handlers = new ArrayList<>();
 
         protected Wrapper(@NonNull JSONObject payload) throws JSONException {
             super(payload);
@@ -216,17 +233,17 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
             for (BranchLinkHandler handler : handlers) {
-                if (handler.validate(context, appPackageName)) return true;
+                if (handler.validate(context, parent)) return true;
             }
             return false;
         }
 
         @Override
-        boolean open(@NonNull Context context, @NonNull String appPackageName) {
+        boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
             for (BranchLinkHandler handler : handlers) {
-                if (handler.open(context, appPackageName)) return true;
+                if (handler.open(context, parent)) return true;
             }
             return false;
         }
@@ -237,6 +254,7 @@ abstract class BranchLinkHandler implements Parcelable {
      * passing the action to wrapped handlers.
      */
     private static class TestInstalled extends Wrapper {
+        private final static String TYPE = "test_installed";
         private final static String KEY_PACKAGE = "package";
 
         private final String packageName;
@@ -247,9 +265,9 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
             if (!Util.isAppInstalled(context, packageName)) return false;
-            return super.validate(context, appPackageName);
+            return super.validate(context, parent);
         }
     }
 
@@ -258,6 +276,7 @@ abstract class BranchLinkHandler implements Parcelable {
      * passing the action to wrapped handlers.
      */
     private static class TestNotInstalled extends Wrapper {
+        private final static String TYPE = "test_not_installed";
         private final static String KEY_PACKAGE = "package";
 
         private final String packageName;
@@ -268,9 +287,38 @@ abstract class BranchLinkHandler implements Parcelable {
         }
 
         @Override
-        boolean validate(@NonNull Context context, @NonNull String appPackageName) {
+        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
             if (Util.isAppInstalled(context, packageName)) return false;
-            return super.validate(context, appPackageName);
+            return super.validate(context, parent);
+        }
+    }
+
+    /**
+     * A {@link Wrapper} that opens a {@link BranchDeepViewFragment} and passes it to the
+     * deepview handler that can be registered by users. The default behavior will open the
+     * fragment as a floating dialog. On click of the CTA button, this wrapper's handlers will
+     * be invoked.
+     */
+    private static class DeepView extends Wrapper {
+        private final static String TYPE = "deep_view";
+
+        private DeepView(@NonNull JSONObject payload) throws JSONException {
+            super(payload);
+        }
+
+        @Override
+        boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            // Don't call super: these links must only be opened on click of the CTA button.
+            // Instead, construct the fragment and let the public handler open it.
+            IBranchDeepViewHandler handler = BranchSearch.getInstance()
+                    .getBranchConfiguration()
+                    .getDeepViewHandler();
+            BranchDeepViewFragment fragment = new BranchDeepViewFragment(parent, handlers,
+                    parent.getName(),
+                    parent.getDescription(),
+                    parent.getImageUrl(),
+                    parent.deepview_extra_text);
+            return handler.launchDeepView(context, fragment);
         }
     }
 }

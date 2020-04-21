@@ -42,6 +42,7 @@ public class BranchConfiguration {
     private int intentFlags = Intent.FLAG_ACTIVITY_NEW_TASK;
     private final Map<String, Object> requestExtra = new HashMap<>();
     private IBranchShortcutHandler shortcutHandler = IBranchShortcutHandler.DEFAULT;
+    private IBranchDeepViewHandler deepViewHandler = IBranchDeepViewHandler.DEFAULT;
 
     // JSONKeys associated with a Configuration
     enum JSONKey {
@@ -325,6 +326,29 @@ public class BranchConfiguration {
     @NonNull
     public IBranchShortcutHandler getShortcutHandler() {
         return shortcutHandler;
+    }
+
+    /**
+     * Override the default deepview handler to validate and launch Deep Views.
+     * @param deepViewHandler handler to use
+     * @return this BranchConfiguration
+     */
+    @SuppressWarnings({"WeakerAccess", "unused"})
+    @NonNull
+    public BranchConfiguration setDeepViewHandler(@NonNull IBranchDeepViewHandler deepViewHandler) {
+        this.deepViewHandler = deepViewHandler;
+        return this;
+    }
+
+    /**
+     * Returns the deepview handler.
+     * @see #setDeepViewHandler(IBranchDeepViewHandler)
+     * @return the deepview handler
+     */
+    @SuppressWarnings("WeakerAccess")
+    @NonNull
+    public IBranchDeepViewHandler getDeepViewHandler() {
+        return deepViewHandler;
     }
 
     /**
