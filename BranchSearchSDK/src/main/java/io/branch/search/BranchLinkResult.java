@@ -214,6 +214,7 @@ public class BranchLinkResult implements Parcelable {
      * which item was clicked, improving the rankings and personalization over time
      */
     public void registerClickEvent() {
+
         if (!TextUtils.isEmpty(click_tracking_url)) {
             // Fire off an async click event
             BranchSearch.getInstance()

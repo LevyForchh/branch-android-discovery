@@ -1,1 +1,1 @@
-include ':BranchSearchSDK', ':BranchSearchDemo', ':DiscoLinkTester'
+include ':BranchSearchSDK', ':BranchSearchDemo', ':DiscoLinkTester', ':Analytics'
