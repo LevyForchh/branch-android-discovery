@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +24,10 @@ import java.util.Map;
  *
  * Handlers can contain other handlers inside: see {@link Wrapper}.
  * In this case validation and opening functions will forward the event to children.
+ *
+ * All handler implementations are currently private and are meant to be constructed
+ * from JSON using {@link BranchLinkHandler#from(JSONObject)}.
+ * These classes also use the JSON string to easily implement {@link Parcelable}.
  */
 abstract class BranchLinkHandler implements Parcelable {
 
@@ -47,8 +52,23 @@ abstract class BranchLinkHandler implements Parcelable {
         payloadString = payload.toString();
     }
 
+    /**
+     * Called for the handler to validate its contents. If false is returned, this handler
+     * will be discarded and {@link #open(Context, BranchLinkResult)} will not be called.
+     * If true is returned, open might be called but it's still possible that it will fail.
+     * @param context a valid context
+     * @param parent the root result
+     * @return true if probably openable
+     */
     abstract boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent);
 
+    /**
+     * Called for the handler to open its contents. Should return true if the action
+     * succeeded, and false otherwise.
+     * @param context a valid context
+     * @param parent the root result
+     * @return true if opened
+     */
     abstract boolean open(@NonNull Context context, @NonNull BranchLinkResult parent);
 
     @Override
@@ -302,8 +322,21 @@ abstract class BranchLinkHandler implements Parcelable {
     private static class DeepView extends Wrapper {
         private final static String TYPE = "deep_view";
 
+        private final static String KEY_TITLE = "title";
+        private final static String KEY_DESCRIPTION = "description";
+        private final static String KEY_IMAGE_URL = "image_url";
+        // TODO cta text ?
+        // TODO put deepview_extra_text here instead of link ?
+
+        private final String imageUrl;
+        private final String title;
+        private final String description;
+
         private DeepView(@NonNull JSONObject payload) throws JSONException {
             super(payload);
+            imageUrl = payload.optString(KEY_IMAGE_URL);
+            title = payload.optString(KEY_TITLE);
+            description = payload.optString(KEY_DESCRIPTION);
         }
 
         @Override
@@ -313,10 +346,11 @@ abstract class BranchLinkHandler implements Parcelable {
             IBranchDeepViewHandler handler = BranchSearch.getInstance()
                     .getBranchConfiguration()
                     .getDeepViewHandler();
-            BranchDeepViewFragment fragment = new BranchDeepViewFragment(parent, handlers,
-                    parent.getName(),
-                    parent.getDescription(),
-                    parent.getImageUrl(),
+            BranchDeepViewFragment fragment = new BranchDeepViewFragment(parent,
+                    handlers,
+                    TextUtils.isEmpty(title) ? parent.getName() : title,
+                    TextUtils.isEmpty(description) ? parent.getDescription() : description,
+                    TextUtils.isEmpty(imageUrl) ? parent.getImageUrl() : imageUrl,
                     parent.deepview_extra_text);
             return handler.launchDeepView(context, fragment);
         }
