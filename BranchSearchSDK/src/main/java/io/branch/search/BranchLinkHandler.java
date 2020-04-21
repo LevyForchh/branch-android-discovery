@@ -103,16 +103,19 @@ abstract class BranchLinkHandler implements Parcelable {
     private static class ViewIntent extends BranchLinkHandler {
         private final static String TYPE = "view_intent";
         private final static String KEY_DATA = "data";
+        private final static String KEY_ACTION = "action";
         private final static String KEY_TARGET = "forcePackage";
         private final static String KEY_EXTRAS = "extras";
 
         private final Uri data;
         private final String target;
+        private final String action;
         private final Map<String, String> extras = new HashMap<>();
 
         private ViewIntent(@NonNull JSONObject payload) throws JSONException {
             super(payload);
             data = Uri.parse(payload.getString(KEY_DATA));
+            action = payload.optString(KEY_ACTION, Intent.ACTION_VIEW);
             target = payload.has(KEY_TARGET) ? payload.getString(KEY_TARGET) : null;
             if (payload.has(KEY_EXTRAS)) {
                 JSONObject extras = payload.getJSONObject(KEY_EXTRAS);
@@ -127,14 +130,14 @@ abstract class BranchLinkHandler implements Parcelable {
         @Override
         boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
             if (target != null && !Util.isAppInstalled(context, target)) return false;
-            Intent intent = new Intent(Intent.ACTION_VIEW, data);
+            Intent intent = new Intent(action, data);
             if (target != null) intent.setPackage(target); // no need to add extras here.
             return !context.getPackageManager().queryIntentActivities(intent, 0).isEmpty();
         }
 
         @Override
         boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, data);
+            Intent intent = new Intent(action, data);
             if (target != null) intent.setPackage(target);
             for (String extra : extras.keySet()) {
                 intent.putExtra(extra, extras.get(extra));
