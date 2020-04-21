@@ -2,10 +2,12 @@ package io.branch.search;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
@@ -37,6 +39,7 @@ abstract class BranchLinkHandler implements Parcelable {
         switch (type) {
             case ViewIntent.TYPE: return new ViewIntent(payload);
             case LaunchIntent.TYPE: return new LaunchIntent(payload);
+            case CustomIntent.TYPE: return new CustomIntent(payload);
             case Shortcut.TYPE: return new Shortcut(payload);
             case TestInstalled.TYPE: return new TestInstalled(payload);
             case TestNotInstalled.TYPE: return new TestNotInstalled(payload);
@@ -98,25 +101,17 @@ abstract class BranchLinkHandler implements Parcelable {
     };
 
     /**
-     * The view_intent handler, opening an Uri and optionally forcing the target package.
+     * Base class for intent-based handlers.
+     * See {@link ViewIntent}, {@link LaunchIntent}, {@link CustomIntent}.
      */
-    private static class ViewIntent extends BranchLinkHandler {
-        private final static String TYPE = "view_intent";
-        private final static String KEY_DATA = "data";
-        private final static String KEY_ACTION = "action";
-        private final static String KEY_TARGET = "forcePackage";
+    @SuppressWarnings("WeakerAccess")
+    private static abstract class BaseIntent extends BranchLinkHandler {
         private final static String KEY_EXTRAS = "extras";
 
-        private final Uri data;
-        private final String target;
-        private final String action;
         private final Map<String, String> extras = new HashMap<>();
 
-        private ViewIntent(@NonNull JSONObject payload) throws JSONException {
+        protected BaseIntent(@NonNull JSONObject payload) throws JSONException {
             super(payload);
-            data = Uri.parse(payload.getString(KEY_DATA));
-            action = payload.optString(KEY_ACTION, Intent.ACTION_VIEW);
-            target = payload.has(KEY_TARGET) ? payload.getString(KEY_TARGET) : null;
             if (payload.has(KEY_EXTRAS)) {
                 JSONObject extras = payload.getJSONObject(KEY_EXTRAS);
                 Iterator<String> keys = extras.keys();
@@ -127,79 +122,104 @@ abstract class BranchLinkHandler implements Parcelable {
             }
         }
 
+        @Nullable
+        protected abstract Intent createIntent(@NonNull Context context, @NonNull BranchLinkResult parent);
+
         @Override
         boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
-            if (target != null && !Util.isAppInstalled(context, target)) return false;
-            Intent intent = new Intent(action, data);
-            if (target != null) intent.setPackage(target); // no need to add extras here.
-            return !context.getPackageManager().queryIntentActivities(intent, 0).isEmpty();
+            Intent intent = createIntent(context, parent);
+            PackageManager manager = context.getPackageManager();
+            return intent != null && !manager.queryIntentActivities(intent, 0).isEmpty();
         }
 
         @Override
         boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
-            Intent intent = new Intent(action, data);
-            if (target != null) intent.setPackage(target);
-            for (String extra : extras.keySet()) {
-                intent.putExtra(extra, extras.get(extra));
+            Intent intent = createIntent(context, parent);
+            if (intent != null) {
+                for (String extra : extras.keySet()) {
+                    intent.putExtra(extra, extras.get(extra));
+                }
+                intent.setFlags(BranchSearch.getInstance()
+                        .getBranchConfiguration()
+                        .getLaunchIntentFlags());
+                try {
+                    context.startActivity(intent);
+                    return true;
+                } catch (Exception ignore) {}
             }
-            intent.setFlags(BranchSearch.getInstance()
-                    .getBranchConfiguration()
-                    .getLaunchIntentFlags());
-            try {
-                context.startActivity(intent);
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            return false;
         }
     }
 
     /**
-     * The launch_intent handler, opening an app with
+     * The "view_intent" handler, opening an Uri and optionally forcing the target package.
+     */
+    private static class ViewIntent extends BaseIntent {
+        private final static String TYPE = "view_intent";
+        private final static String KEY_DATA = "data";
+        private final static String KEY_TARGET = "forcePackage";
+
+        private final Uri data;
+        private final String target;
+
+        private ViewIntent(@NonNull JSONObject payload) throws JSONException {
+            super(payload);
+            data = Uri.parse(payload.getString(KEY_DATA));
+            target = payload.has(KEY_TARGET) ? payload.getString(KEY_TARGET) : null;
+        }
+
+        @Nullable
+        @Override
+        protected Intent createIntent(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            Intent intent = new Intent(Intent.ACTION_VIEW, data);
+            if (target != null) intent.setPackage(target);
+            return intent;
+        }
+    }
+
+    /**
+     * The "intent" handler, that creates intents with a specific action and optional Uri.
+     * Action is mandatory.
+     */
+    private static class CustomIntent extends BaseIntent {
+        private final static String TYPE = "intent";
+        private final static String KEY_DATA = "data";
+        private final static String KEY_ACTION = "action";
+
+        private final Uri data;
+        private final String action;
+
+        private CustomIntent(@NonNull JSONObject payload) throws JSONException {
+            super(payload);
+            data = payload.has(KEY_DATA) ? Uri.parse(payload.getString(KEY_DATA)) : null;
+            action = payload.getString(KEY_ACTION);
+        }
+
+        @Nullable
+        @Override
+        protected Intent createIntent(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            Intent intent = new Intent(action);
+            if (data != null) intent.setData(data);
+            return intent;
+        }
+    }
+
+    /**
+     * The "launch_intent" handler, opening an app with
      * {@link android.content.pm.PackageManager#getLaunchIntentForPackage(String)}.
      */
-    private static class LaunchIntent extends BranchLinkHandler {
+    private static class LaunchIntent extends BaseIntent {
         private final static String TYPE = "launch_intent";
-        private final static String KEY_EXTRAS = "extras";
-
-        private final Map<String, String> extras = new HashMap<>();
 
         private LaunchIntent(@NonNull JSONObject payload) throws JSONException {
             super(payload);
-            if (payload.has(KEY_EXTRAS)) {
-                JSONObject extras = payload.getJSONObject(KEY_EXTRAS);
-                Iterator<String> keys = extras.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    this.extras.put(key, extras.getString(key));
-                }
-            }
         }
 
+        @Nullable
         @Override
-        boolean validate(@NonNull Context context, @NonNull BranchLinkResult parent) {
-            String appPackageName = parent.getDestinationPackageName();
-            return context.getPackageManager().getLaunchIntentForPackage(appPackageName) != null;
-        }
-
-        @Override
-        boolean open(@NonNull Context context, @NonNull BranchLinkResult parent) {
-            String appPackageName = parent.getDestinationPackageName();
-            Intent intent = context.getPackageManager().getLaunchIntentForPackage(appPackageName);
-            if (intent == null) return false; // App uninstalled after validation!
-            for (String extra : extras.keySet()) {
-                intent.putExtra(extra, extras.get(extra));
-            }
-            // addFlags instead of setFlags, to ensure we don't override anything important.
-            intent.addFlags(BranchSearch.getInstance()
-                    .getBranchConfiguration()
-                    .getLaunchIntentFlags());
-            try {
-                context.startActivity(intent);
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+        protected Intent createIntent(@NonNull Context context, @NonNull BranchLinkResult parent) {
+            String packageName = parent.getDestinationPackageName();
+            return context.getPackageManager().getLaunchIntentForPackage(packageName);
         }
     }
 
