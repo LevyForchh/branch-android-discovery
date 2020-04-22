@@ -127,17 +127,17 @@ class BranchAnalyticsInternal implements LifecycleObserver {
             payload.putOpt("empty_sessions", emptySessionCount);
 
             // top level: static data not related to user actions
-            for (Map.Entry<String, String> customStringEntry : customStrings.entrySet()) {
-                payload.putOpt(customStringEntry.getKey(), customStringEntry.getValue());
+            for (Map.Entry<String, String> staticStringEntry : staticStrings.entrySet()) {
+                payload.putOpt(staticStringEntry.getKey(), staticStringEntry.getValue());
             }
-            for (Map.Entry<String, Integer> customIntEntry : customInts.entrySet()) {
-                payload.putOpt(customIntEntry.getKey(), customIntEntry.getValue());
+            for (Map.Entry<String, Integer> staticIntEntry : staticInts.entrySet()) {
+                payload.putOpt(staticIntEntry.getKey(), staticIntEntry.getValue());
             }
-            for (Map.Entry<String, Double> customDoubleEntry : customDoubles.entrySet()) {
-                payload.putOpt(customDoubleEntry.getKey(), customDoubleEntry.getValue());
+            for (Map.Entry<String, Double> staticDoubleEntry : staticDoubles.entrySet()) {
+                payload.putOpt(staticDoubleEntry.getKey(), staticDoubleEntry.getValue());
             }
-            for (Map.Entry<String, JSONObject> customObjectEntry : customObjects.entrySet()) {
-                payload.putOpt(customObjectEntry.getKey(), customObjectEntry.getValue());
+            for (Map.Entry<String, JSONObject> staticObjectEntry : staticObjects.entrySet()) {
+                payload.putOpt(staticObjectEntry.getKey(), staticObjectEntry.getValue());
             }
 
             // top level: records of unique and uncommon user actions
