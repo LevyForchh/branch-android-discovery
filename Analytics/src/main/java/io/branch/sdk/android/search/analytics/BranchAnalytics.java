@@ -49,10 +49,44 @@ public class BranchAnalytics {
     }
 
     /**
-     * Register custom events such as device_info or sdk_configuration
+     * `recordXXX` APIs add the XXX entity to top level of the payload and are treated as records of
+     * user behavior, thus `isEmptySession()` will return false if there is even a single record or user behavior
      */
-    public static void registerCustomEvent(@NonNull String key, @NonNull JSONObject customEvent) {
-        analyticsInternal.registerCustomEvent(key, customEvent);
+    public static void recordObject(@NonNull String key, @NonNull JSONObject customEvent) {
+        analyticsInternal.recordObject(key, customEvent);
+    }
+
+    public static void recordString(@NonNull String key, @NonNull String customString) {
+        analyticsInternal.recordString(key, customString);
+    }
+
+    public static void recordInt(@NonNull String key, Integer customInt) {
+        analyticsInternal.recordInt(key, customInt);
+    }
+
+    public static void recordDouble(@NonNull String key, @NonNull Double customDouble) {
+        analyticsInternal.recordDouble(key, customDouble);
+    }
+
+    /**
+     * `addXXX` APIs add the XXX entity to top level of the payload. These values are treated as static
+     * and not related to the user behavior. If static data is the only data passed to analytics during
+     * this session, we will treat it as an empty session and will not make the upload to the servers.
+     */
+    void addObject(@NonNull String key, @NonNull JSONObject staticObject) {
+        analyticsInternal.addObject(key, staticObject);// (e.g. 'device_info', 'sdk_configuration')
+    }
+
+    void addString(@NonNull String key, @NonNull String staticString) {
+        analyticsInternal.addString(key, staticString);// (e.g. 'branch_key')
+    }
+
+    void addInt(@NonNull String key, @NonNull Integer staticInt) {
+        analyticsInternal.addInt(key, staticInt);// (e.g. ??)
+    }
+
+    void addDouble(@NonNull String key, @NonNull Double staticDouble) {
+        analyticsInternal.addDouble(key, staticDouble);// (e.g. ???)
     }
 
     /**
@@ -60,5 +94,12 @@ public class BranchAnalytics {
      */
     public static JSONObject getAnalyticsData() {
         return analyticsInternal.formatPayload();
+    }
+
+    /**
+     * Get analytics window id, so it can added to API requests for analytics data matching on the backend
+     */
+    public static String getAnalyticsWindowId() {
+        return analyticsInternal.sessionId;
     }
 }
