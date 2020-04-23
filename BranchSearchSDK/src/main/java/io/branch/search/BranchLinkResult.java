@@ -330,18 +330,13 @@ public class BranchLinkResult implements Parcelable {
     @Nullable
     public BranchSearchError open(@NonNull Context context) {
         registerClickEvent();
-        boolean open = false;
         for (BranchLinkHandler handler : handlers) {
             // let's validate again before opening: something might have changed.
-            open = handler.validate(context, this)
+            boolean open = handler.validate(context, this)
                     && handler.open(context, this);
-            if (open) break;
+            if (open) return null;
         }
-        if (open) {
-            return null;
-        } else {
-            return new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
-        }
+        return new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
     }
 
     @SuppressLint("NewApi")
@@ -389,15 +384,10 @@ public class BranchLinkResult implements Parcelable {
         boolean canHandle = false;
         for (BranchLinkHandler handler : link.handlers) {
             if (handler.validate(context, link)) {
-                canHandle = true;
-                break;
+                return link;
             }
         }
-        if (!canHandle) {
-            return null;
-        } else {
-            return link;
-        }
+        return null;
     }
 
     @Override
