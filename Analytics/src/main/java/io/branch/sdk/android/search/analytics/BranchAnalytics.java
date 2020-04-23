@@ -6,12 +6,53 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 
 /**
- * Based on https://www.notion.so/branchdisco/SDK-side-Analytics-Module-spec-ff2b69a0438649d287a794b7298a5f10
+ * Analytics module tracks 'clicks' and 'impressions' of objects that belong to the Search SDK APIs
+ * (e.g. 'BranchQueryHint', 'BranchAutoSuggestion', 'BranchAppResult'/'BranchLinkResult').
+ * The latter objects must implement the interface, 'TrackedEntity', which contains three methods,
+ *
+ *      'JSONObject getImpressionJson()'                       - return null disable tracking impressions
+ *      'JSONObject getClickJson()'                            - return null disable tracking clicks
+ *      'String getAPI()'                                      - return key prefix for payload formatting (e.g. "api_clicks":[...], "api_impressions":[...])
+ *
+ * Analytics module then collect 'clicks' and 'impressions' via the following APIs:
+ * 
+ *      'trackImpressions(View view, TrackedEntity impression)'- Called at creation time of the view.
+ *      'trackClick(TrackedEntity click)'                      - Called on click of some TrackedEntity
+ *      TODO overload with 'boolean countRepeats'
+ *
+ *      TODO complete transition to TrackedEntity (suggest pulling ads out as api?)
+ *      TODO add a some 50 or so local variables of List objects, when we spot a new api, assign value to variable and synchronize over that list instead of impressions hashmap for all APIs
+ *
+ * Analytics module can also track custom (json compliant) key value pairs via the following APIs:
+ *
+ *      trackObject(String key, JSONObject customEvent)
+ *      trackString(String key, String customString)
+ *      trackInt(String key, Integer customInt)
+ *      trackDouble(String key, Double customDouble)
+ *      trackArray(String key, JSONArray customArray)
+ *      TODO overload the above with 'String jsonParentKey'
+ *
+ * If there are tracked 'clicks', 'impressions' or custom objects, the upload to the server does not
+ * happen but the count of these empty sessions is kept and reported in the next upload. Finally, there
+ * are APIs to 'add' objects to the payload, these objects are considered static or, otherwise, not
+ * important enough to post them to the server in the case there are no tracked events.
+ *
+ *      addObject(String key, JSONObject customEvent)
+ *      addString(String key, String customString)
+ *      addInt(String key, Integer customInt)
+ *      addDouble(String key, Double customDouble)
+ *      addArray(String key, JSONArray customArray)
+ * 
+ * Note, on the server side, 'session' has a different (business logic) meaning and lasts across multiple
+ * app visibility lifecycles.
+ * 
+ * Analytics module tech spec: https://www.notion.so/branchdisco/SDK-side-Analytics-Module-spec-ff2b69a0438649d287a794b7298a5f10
  */
 public class BranchAnalytics {
     static final String LOGTAG = "BranchAnalytics";
@@ -32,40 +73,45 @@ public class BranchAnalytics {
      * Use APIs registerClickEvent and registerImpressionEvent to register default clicks and events,
      * or split them up in the payload by "clickCategory" and "impressionCategory"
      */
-    public static void registerClickEvent(@NonNull JSONObject click) {
-        registerClickEvent(click, null);
+    public static void trackClick(@NonNull JSONObject click) {
+        trackClick(click, null);
     }
 
-    public static void registerClickEvent(@NonNull JSONObject click, @Nullable String clickCategory) {
-        analyticsInternal.registerClickEvent(click, clickCategory);
+    public static void trackClick(@NonNull JSONObject click, @Nullable String api) {
+        analyticsInternal.registerClickEvent(click, api);
     }
 
-    public static void registerImpressionEvent(@NonNull JSONObject impression) {
-        registerImpressionEvent(impression, null);
+    public static void trackImpression(@NonNull JSONObject impression) {
+        trackImpression(impression, null);
     }
 
-    public static void registerImpressionEvent(@NonNull JSONObject impression, @Nullable String impressionCategory) {
-        analyticsInternal.registerImpressionEvent(impression, impressionCategory);
+    public static void trackImpression(@NonNull JSONObject impression, @Nullable String api) {
+        analyticsInternal.trackImpression(impression, api);
     }
 
     /**
-     * `recordXXX` APIs add the XXX entity to top level of the payload and are treated as records of
-     * user behavior, thus `isEmptySession()` will return false if there is even a single record or user behavior
+     * `trackXXX` APIs add the XXX entity to top level of the payload and are treated as records of
+     * user behavior, thus `isEmptySession()` will return false if there is even a single record or
+     * user behavior and the module will proceed to make the upload to the server.
      */
-    public static void recordObject(@NonNull String key, @NonNull JSONObject customEvent) {
-        analyticsInternal.recordObject(key, customEvent);
+    public static void trackObject(@NonNull String key, @NonNull JSONObject customEvent) {
+        analyticsInternal.trackObject(key, customEvent);
     }
 
-    public static void recordString(@NonNull String key, @NonNull String customString) {
-        analyticsInternal.recordString(key, customString);
+    public static void trackString(@NonNull String key, @NonNull String customString) {
+        analyticsInternal.trackString(key, customString);
     }
 
-    public static void recordInt(@NonNull String key, Integer customInt) {
-        analyticsInternal.recordInt(key, customInt);
+    public static void trackInt(@NonNull String key, Integer customInt) {
+        analyticsInternal.trackInt(key, customInt);
     }
 
-    public static void recordDouble(@NonNull String key, @NonNull Double customDouble) {
-        analyticsInternal.recordDouble(key, customDouble);
+    public static void trackDouble(@NonNull String key, @NonNull Double customDouble) {
+        analyticsInternal.trackDouble(key, customDouble);
+    }
+
+    public static void trackArray(@NonNull String key, @NonNull JSONArray customArray) {
+        analyticsInternal.trackArray(key, customArray);
     }
 
     /**
@@ -89,17 +135,25 @@ public class BranchAnalytics {
         analyticsInternal.addDouble(key, staticDouble);// (e.g. ???)
     }
 
+    void addArray(@NonNull String key, @NonNull JSONArray staticArray) {
+        analyticsInternal.addArray(key, staticArray);// (e.g. ???)
+    }
+
     /**
-     * Get the current state of analytics batch
+     * Get the current state of the analytics batch
      */
     public static JSONObject getAnalyticsData() {
         return analyticsInternal.formatPayload();
     }
 
     /**
-     * Get analytics window id, so it can added to API requests for analytics data matching on the backend
+     * Get analytics window id (so it can added to API requests for analytics data matching)
      */
     public static String getAnalyticsWindowId() {
         return analyticsInternal.sessionId;
+    }
+
+    public interface TrackedEntity {
+        JSONObject getTrackedEntityJson();
     }
 }
