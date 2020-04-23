@@ -104,14 +104,17 @@ public class BranchLinkResult implements Parcelable {
         return entity_id;
     }
 
+    @NonNull
     public String getName() {
         return name;
     }
 
+    @NonNull
     public String getDescription() {
         return description;
     }
 
+    @NonNull
     public String getImageUrl() {
         return image_url;
     }
