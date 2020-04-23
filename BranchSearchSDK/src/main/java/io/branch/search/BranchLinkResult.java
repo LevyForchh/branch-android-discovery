@@ -381,7 +381,6 @@ public class BranchLinkResult implements Parcelable {
 
         // Now that we have parsed the JSON, filter ourselves out if needed.
         Context context = BranchSearch.getInstance().getApplicationContext();
-        boolean canHandle = false;
         for (BranchLinkHandler handler : link.handlers) {
             if (handler.validate(context, link)) {
                 return link;
