@@ -15,12 +15,16 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.TextUtils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Class for representing a a deep link to content
@@ -61,10 +65,6 @@ public class BranchLinkResult implements Parcelable {
     @Retention(RetentionPolicy.SOURCE)
     public @interface IconCategory {}
 
-    private static final String ANDROID_APP_URI_SCHEME = "android-app";
-    private static final String PLAY_STORE_URI_HOST = "play.google.com";
-    private static final String PLAY_STORE_PACKAGE_NAME = "com.android.vending";
-
     private static final String LINK_ENTITY_ID_KEY = "entity_id";
     private static final String LINK_TYPE_KEY = "type";
     private static final String LINK_SCORE_KEY = "score";
@@ -72,14 +72,12 @@ public class BranchLinkResult implements Parcelable {
     private static final String LINK_DESC_KEY = "description";
     private static final String LINK_IMAGE_URL_KEY = "image_url";
     private static final String LINK_METADATA_KEY = "metadata";
-    private static final String LINK_URI_SCHEME_KEY = "uri_scheme";
-    private static final String LINK_WEB_LINK_KEY = "web_link";
     private static final String LINK_ROUTING_MODE_KEY = "routing_mode";
     private static final String LINK_TRACKING_KEY = "click_tracking_link";
     private static final String LINK_RANKING_HINT_KEY = "ranking_hint";
-    private static final String LINK_ANDROID_SHORTCUT_ID_KEY = "android_shortcut_id";
     private static final String LINK_ICON_CATEGORY = "icon_category";
     private static final String LINK_DEEPVIEW_EXTRA_TEXT_KEY = "deepview_extra_text";
+    private static final String LINK_HANDLERS = "linking";
 
     private String entity_id;
     private String name;
@@ -91,35 +89,37 @@ public class BranchLinkResult implements Parcelable {
     private JSONObject metadata;
     private String type;
     private float score;
-
     private String routing_mode;
-    private String uri_scheme;
-    String web_link; /* read by BranchResponseParser */
     private String destination_store_id;
     private String click_tracking_url;
-    private String android_shortcut_id;
     private String icon_category;
-    String deepview_extra_text; /* read by BranchDeepViewFragment */
+    String deepview_extra_text; /* read by BranchLinkHandler.DeepView */
+    private final List<BranchLinkHandler> handlers = new ArrayList<>();
 
     private BranchLinkResult() {
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getEntityID() {
         return entity_id;
     }
 
+    @NonNull
     public String getName() {
         return name;
     }
 
+    @NonNull
     public String getDescription() {
         return description;
     }
 
+    @NonNull
     public String getImageUrl() {
         return image_url;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getAppName() {
         return app_name;
     }
@@ -132,6 +132,7 @@ public class BranchLinkResult implements Parcelable {
         return type;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public float getScore() {
         return score;
     }
@@ -140,6 +141,7 @@ public class BranchLinkResult implements Parcelable {
         return metadata;
     }
 
+    @SuppressWarnings("WeakerAccess")
     @NonNull
     public String getRankingHint() {
         return ranking_hint;
@@ -154,6 +156,7 @@ public class BranchLinkResult implements Parcelable {
         return ranking_hint.toLowerCase().startsWith("featured");
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getRoutingMode() {
         return routing_mode;
     }
@@ -161,28 +164,30 @@ public class BranchLinkResult implements Parcelable {
     /**
      * If present, returns an Uri backed by an app-specific scheme that can
      * deep link into the app.
-     * @return uri or null
+     * @deprecated do not use. always returns null
+     * @return null
      */
-    @SuppressWarnings("WeakerAccess")
+    @Deprecated
     @Nullable
     public String getUriScheme() {
-        return TextUtils.isEmpty(uri_scheme) ? null : uri_scheme;
+        return null;
     }
 
-    @SuppressWarnings("WeakerAccess")
+    /**
+     * @deprecated always returns the empty string.
+     * @return empty string
+     */
+    @Deprecated
     @NonNull
     public String getWebLink() {
-        String webLink = web_link;
-        if (webLink == null) {
-            webLink = "https://play.google.com/store/apps/details?id=" + destination_store_id;
-        }
-        return webLink;
+        return "";
     }
 
     public String getDestinationPackageName() {
         return destination_store_id;
     }
 
+    @SuppressWarnings("WeakerAccess")
     public String getClickTrackingUrl() {
         return click_tracking_url;
     }
@@ -191,11 +196,12 @@ public class BranchLinkResult implements Parcelable {
      * Returns the shortcut id, or null if this link does not represent an Android launcher shortcut.
      * To inspect the package, please see {@link #getDestinationPackageName()}.
      * @return id or null
+     * @deprecated this always return null
      */
-    @SuppressWarnings("WeakerAccess")
+    @Deprecated
     @Nullable
     public String getAndroidShortcutId() {
-        return TextUtils.isEmpty(android_shortcut_id) ? null : android_shortcut_id;
+        return null;
     }
 
     /**
@@ -213,6 +219,7 @@ public class BranchLinkResult implements Parcelable {
      * This method allows you to register a click event on the action, which informs Branch
      * which item was clicked, improving the rankings and personalization over time
      */
+    @SuppressWarnings("WeakerAccess")
     public void registerClickEvent() {
 
         if (!TextUtils.isEmpty(click_tracking_url)) {
@@ -230,17 +237,19 @@ public class BranchLinkResult implements Parcelable {
      *
      * @param manager a fragment manager
      * @return an error if the deep view could not be opened
+     * @deprecated deepviews are now opened automatically with {@link #open(Context)}
      */
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
+    @Deprecated
     @Nullable
     public BranchSearchError openDeepView(@NonNull FragmentManager manager) {
         registerClickEvent();
-
-        // NOTE: We never return an error, but we might in a future implementation.
-        // This also is consistent with openContent(Context, boolean).
-        DialogFragment fragment = BranchDeepViewFragment.getInstance(this);
-        fragment.show(manager, BranchDeepViewFragment.TAG);
-        return null;
+        try {
+            BranchDeepViewFragment fragment = createDeepViewFragmentForLegacyAPIs();
+            fragment.getInstance().show(manager, BranchDeepViewFragment.TAG);
+            return null;
+        } catch (JSONException e) {
+            return new BranchSearchError(BranchSearchError.ERR_CODE.NOT_SUPPORTED_ERROR);
+        }
     }
 
     /**
@@ -250,18 +259,37 @@ public class BranchLinkResult implements Parcelable {
      *
      * @param manager a fragment manager
      * @return an error if the deep view could not be opened
-     * @deprecated please use {@link #openDeepView(FragmentManager)} instead
+     * @deprecated deepviews are now opened automatically with {@link #open(Context)}
      */
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
     @Deprecated
     @Nullable
     public BranchSearchError openDeepView(@NonNull android.app.FragmentManager manager) {
         // Legacy signature of openDeepView() that uses the old, deprecated FragmentManager,
         // for ooold apps that do not want to update their activity to FragmentActivity.
         registerClickEvent();
-        android.app.DialogFragment fragment = BranchDeepViewFragment.getLegacyInstance(this);
-        fragment.show(manager, BranchDeepViewFragment.TAG);
-        return null;
+        try {
+            BranchDeepViewFragment fragment = createDeepViewFragmentForLegacyAPIs();
+            fragment.getLegacyInstance().show(manager, BranchDeepViewFragment.TAG);
+            return null;
+        } catch (JSONException e) {
+            return new BranchSearchError(BranchSearchError.ERR_CODE.NOT_SUPPORTED_ERROR);
+        }
+    }
+
+    // To still support openDeepView() (deprecated) we must be able to emulate the pre-1.6.0 behavior:
+    // it had a single action that would just open the play store page for this package.
+    // This method creates a BranchDeepViewFragment with this information.
+    // The modern way of doing this is in BranchLinkResult.DeepView.
+    @Deprecated
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
+    private BranchDeepViewFragment createDeepViewFragmentForLegacyAPIs() throws JSONException {
+        JSONObject intent = new JSONObject();
+        intent.put("@type", "view_intent");
+        intent.put("data", "https://play.google.com/store/apps/details?id="
+                + getDestinationPackageName());
+        List<BranchLinkHandler> handlers = Arrays.asList(BranchLinkHandler.from(intent));
+        return new BranchDeepViewFragment(this, handlers, getName(), getDescription(),
+                getImageUrl(), deepview_extra_text);
     }
 
     /**
@@ -272,153 +300,44 @@ public class BranchLinkResult implements Parcelable {
      * @param context             Application context
      * @param fallbackToPlayStore If set to {@code true} fallbacks to the Google play if the app is not installed and there is no valid web url.
      * @return BranchSearchError {@link BranchSearchError} object to pass any error with complete action. Null if succeeded.
+     * @deprecated please use {@link #open(Context)}
      */
+    @Deprecated
     @SuppressWarnings("UnusedReturnValue")
     @Nullable
     public BranchSearchError openContent(@NonNull Context context, boolean fallbackToPlayStore) {
+        return open(context);
+    }
+
+    /**
+     * Opens this link. Links can be opened in different ways - Branch SDK will determine
+     * what's best by checking the device state, for example to see if the target app is installed
+     * or not.
+     *
+     * To support all the possible options, it is recommended that you pass an Activity context
+     * here: deep views, for instance, will try to find a FragmentManager from the context.
+     * If you can't pass an Activity context but still want to open the deep view fragment,
+     * you can register a {@link IBranchDeepViewHandler} from
+     * {@link BranchConfiguration#setDeepViewHandler(IBranchDeepViewHandler)}.
+     *
+     * Other options, like links based on shortcut results, will need the current app to have
+     * default launcher permissions. If you don't have default launcher permissions but still
+     * want to try to open shortcuts, you can register a {@link IBranchShortcutHandler} from
+     * {@link BranchConfiguration#setShortcutHandler(IBranchShortcutHandler)}.
+     *
+     * @param context a context
+     * @return An error if something went wrong. Null if succeeded.
+     */
+    @Nullable
+    public BranchSearchError open(@NonNull Context context) {
         registerClickEvent();
-        boolean hasApp = Util.isAppInstalled(context, destination_store_id);
-        boolean hasPlayStore = Util.isAppInstalled(context, PLAY_STORE_PACKAGE_NAME);
-
-        // 1. Try to open the app as an Android shortcut
-        boolean success = openAppWithAndroidShortcut(context, hasApp, hasPlayStore);
-
-        // 2. Try to open the app directly with URI Scheme
-        if (!success) {
-            success = openAppWithUriScheme(context, hasApp, hasPlayStore);
+        for (BranchLinkHandler handler : handlers) {
+            // let's validate again before opening: something might have changed.
+            boolean open = handler.validate(context, this)
+                    && handler.open(context, this);
+            if (open) return null;
         }
-
-        // 3. Try opening with the web link in app
-        if (!success) {
-            success = openAppWithWebLink(context, hasApp, hasPlayStore, true);
-        }
-
-        // 4. Try opening with the web link in browser
-        if (!success) {
-            success = openAppWithWebLink(context, hasApp, hasPlayStore, false);
-        }
-
-        // 5. Fallback to the playstore
-        if (!success && fallbackToPlayStore) {
-            success = openAppWithPlayStore(context);
-        }
-
-        BranchSearchError err = null;
-        if (!success) {
-            err = new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
-        }
-        return err;
-    }
-
-    /**
-     * Tries to open this result as an Android shortcut, assuming it represents
-     * one and the current {@link IBranchShortcutHandler} can handle it.
-     * @param context a context
-     * @return true if succeeded
-     */
-    @SuppressWarnings("unused")
-    private boolean openAppWithAndroidShortcut(@NonNull Context context,
-                                               boolean hasApp,
-                                               boolean hasPlayStore) {
-        if (!hasApp) return false;
-        if (Build.VERSION.SDK_INT < 25) return false;
-        String id = getAndroidShortcutId();
-        if (id == null) return false;
-        IBranchShortcutHandler handler = BranchSearch.getInstance()
-                .getBranchConfiguration()
-                .getShortcutHandler();
-        return handler.launchShortcut(context, id, destination_store_id);
-    }
-
-    /**
-     * Tries to open this result with the uri scheme, if present.
-     * @param context a context
-     * @return true if succeeded
-     */
-    private boolean openAppWithUriScheme(@NonNull Context context,
-                                         boolean hasApp,
-                                         boolean hasPlayStore) {
-        try {
-            String scheme = getUriScheme();
-            if (scheme == null) return false;
-            Uri uri = Uri.parse(scheme);
-            boolean isAndroidApp = ANDROID_APP_URI_SCHEME.equals(uri.getScheme());
-            if (!hasApp && !isAndroidApp) return false;
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(uri);
-            int intentFlags = BranchSearch.getInstance()
-                    .getBranchConfiguration()
-                    .getLaunchIntentFlags();
-            intent.setFlags(intentFlags);
-            if (!isAndroidApp) {
-                // This is an app-specific URI. Enforce the package name,
-                // just in the case of conflict between multiple apps using the same
-                // scheme (we've seen this happening). This will avoid the app chooser.
-                intent.setPackage(destination_store_id);
-            } else {
-                // android-app is a special scheme defined by Android that contains
-                // the package in the URI itself. If app is not installed, the system should be
-                // free to handle this, typically by going to the play store.
-                // There's no risk of ambiguity here so no need to force package.
-                // (if we force the PS package, actually it won't even work.)
-            }
-            context.startActivity(intent);
-            return true;
-        } catch (Exception ignore) {
-            // Nothing to do
-        }
-        return false;
-    }
-
-    /**
-     * Tries to open this result with the web link.
-     * If forcePackage is true, the package is passed to the intent to avoid the app chooser.
-     * This can fail if the app does not support this link, so it is recommended to fire a
-     * second call with forcePackage set to false.
-     * @param context context
-     * @param forcePackage true to force package
-     * @return true if succeeded
-     */
-    @SuppressWarnings("StatementWithEmptyBody")
-    private boolean openAppWithWebLink(@NonNull Context context,
-                                       boolean hasApp,
-                                       boolean hasPlayStore,
-                                       boolean forcePackage) {
-        try {
-            String webLink = getWebLink();
-            if (!TextUtils.isEmpty(webLink)) {
-                Uri uri = Uri.parse(webLink);
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(uri);
-                int intentFlags = BranchSearch.getInstance()
-                        .getBranchConfiguration()
-                        .getLaunchIntentFlags();
-                intent.setFlags(intentFlags);
-                if (forcePackage) {
-                    boolean isPlayStore = PLAY_STORE_URI_HOST.equals(uri.getHost());
-                    if (isPlayStore && hasPlayStore) {
-                        // If play store link, instead of forcing the app package, for the play
-                        // store package, so we avoid chooser between play store and browser.
-                        intent.setPackage(PLAY_STORE_PACKAGE_NAME);
-                    } else if (!isPlayStore && hasApp) {
-                        intent.setPackage(destination_store_id);
-                    } else {
-                        // Either a PS link on a phone without PS, or a non-PS link
-                        // for an app that's not installed. Nothing to force.
-                    }
-                }
-                context.startActivity(intent);
-                return true;
-            }
-        } catch (Exception ignore) {
-            // Nothing to do
-        }
-        return false;
-    }
-
-    private boolean openAppWithPlayStore(@NonNull Context context) {
-        return Util.openAppInPlayStore(context, destination_store_id);
+        return new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
     }
 
     @SuppressLint("NewApi")
@@ -427,8 +346,7 @@ public class BranchLinkResult implements Parcelable {
                                            @NonNull String appName,
                                            @NonNull String appPackageName,
                                            @NonNull String appIconUrl,
-                                           @NonNull String appDeepviewExtraText,
-                                           boolean appIsInstalled) {
+                                           @NonNull String appDeepviewExtraText) {
         BranchLinkResult link = new BranchLinkResult();
         link.entity_id = Util.optString(json, LINK_ENTITY_ID_KEY);
         link.type = Util.optString(json, LINK_TYPE_KEY);
@@ -444,39 +362,32 @@ public class BranchLinkResult implements Parcelable {
         if (link.metadata == null) link.metadata = new JSONObject();
 
         link.routing_mode = Util.optString(json, LINK_ROUTING_MODE_KEY);
-        link.uri_scheme = Util.optString(json, LINK_URI_SCHEME_KEY);
-        link.web_link = Util.optString(json, LINK_WEB_LINK_KEY);
         link.destination_store_id = appPackageName;
 
         link.click_tracking_url = Util.optString(json, LINK_TRACKING_KEY);
-        link.android_shortcut_id = Util.optString(json, LINK_ANDROID_SHORTCUT_ID_KEY);
         link.icon_category = json.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
         link.deepview_extra_text = json.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY,
                 appDeepviewExtraText);
 
-        // Now that we have parsed the JSON, filter ourselves out if needed.
-        // Remove invalid shortcuts
-        String shortcutId = link.getAndroidShortcutId();
-        if (shortcutId != null) { // Need to validate
-            Context context = BranchSearch.getInstance().getApplicationContext();
-            IBranchShortcutHandler handler = BranchSearch.getInstance()
-                    .getBranchConfiguration()
-                    .getShortcutHandler();
-            if (!handler.validateShortcut(context, shortcutId, appPackageName)) {
-                return null;
-            }
-        }
-        // If app not installed, remove non http(s)/android-app.
-        if (!appIsInstalled) {
-            boolean isWeb = !TextUtils.isEmpty(link.web_link);
-            boolean isPlayStore = link.getUriScheme() != null
-                    && link.getUriScheme().startsWith("android-app://");
-            if (!isWeb && !isPlayStore) {
-                return null;
+        JSONArray handlers = json.optJSONArray(LINK_HANDLERS);
+        if (handlers != null) {
+            for (int i = 0; i < handlers.length(); i++) {
+                try {
+                    JSONObject object = handlers.getJSONObject(i);
+                    link.handlers.add(BranchLinkHandler.from(object));
+                } catch (JSONException ignore) {
+                }
             }
         }
 
-        return link;
+        // Now that we have parsed the JSON, filter ourselves out if needed.
+        Context context = BranchSearch.getInstance().getApplicationContext();
+        for (BranchLinkHandler handler : link.handlers) {
+            if (handler.validate(context, link)) {
+                return link;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -489,7 +400,6 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.entity_id);
         dest.writeString(this.type);
         dest.writeFloat(this.score);
-
         dest.writeString(this.name);
         dest.writeString(this.description);
         dest.writeString(this.image_url);
@@ -497,16 +407,12 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.app_icon_url);
         dest.writeString(this.ranking_hint);
         dest.writeString(this.metadata.toString());
-
         dest.writeString(this.routing_mode);
-        dest.writeString(this.uri_scheme);
-        dest.writeString(this.web_link);
         dest.writeString(this.destination_store_id);
-
         dest.writeString(this.click_tracking_url);
-        dest.writeString(this.android_shortcut_id);
         dest.writeString(this.icon_category);
         dest.writeString(this.deepview_extra_text);
+        dest.writeTypedList(this.handlers);
     }
 
 
@@ -514,7 +420,6 @@ public class BranchLinkResult implements Parcelable {
         this.entity_id = in.readString();
         this.type = in.readString();
         this.score = in.readFloat();
-
         this.name = in.readString();
         this.description = in.readString();
         this.image_url = in.readString();
@@ -526,16 +431,12 @@ public class BranchLinkResult implements Parcelable {
         } catch (JSONException e) {
             this.metadata = new JSONObject();
         }
-
         this.routing_mode = in.readString();
-        this.uri_scheme = in.readString();
-        this.web_link = in.readString();
         this.destination_store_id = in.readString();
-
         this.click_tracking_url = in.readString();
-        this.android_shortcut_id = in.readString();
         this.icon_category = in.readString();
         this.deepview_extra_text = in.readString();
+        in.readTypedList(this.handlers, BranchLinkHandler.CREATOR);
     }
 
     public static final Creator<BranchLinkResult> CREATOR = new Creator<BranchLinkResult>() {
