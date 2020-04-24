@@ -4,7 +4,6 @@ import android.app.Application;
 import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -26,7 +25,6 @@ import java.lang.ref.WeakReference;
  *      'trackClick(TrackedEntity click)'                      - Called on click of some TrackedEntity
  *      TODO overload with 'boolean countRepeats'
  *
- *      TODO complete transition to TrackedEntity (suggest pulling ads out as api?)
  *      TODO add a some 50 or so local variables of List objects, when we spot a new api, assign value to variable and synchronize over that list instead of impressions hashmap for all APIs
  *
  * Analytics module can also track custom (json compliant) key value pairs via the following APIs:
@@ -73,20 +71,12 @@ public class BranchAnalytics {
      * Use APIs registerClickEvent and registerImpressionEvent to register default clicks and events,
      * or split them up in the payload by "clickCategory" and "impressionCategory"
      */
-    public static void trackClick(@NonNull JSONObject click) {
-        trackClick(click, null);
+    public static void trackClick(@NonNull TrackedEntity click) {
+        analyticsInternal.registerClick(click);
     }
 
-    public static void trackClick(@NonNull JSONObject click, @Nullable String api) {
-        analyticsInternal.registerClickEvent(click, api);
-    }
-
-    public static void trackImpression(@NonNull JSONObject impression) {
-        trackImpression(impression, null);
-    }
-
-    public static void trackImpression(@NonNull JSONObject impression, @Nullable String api) {
-        analyticsInternal.trackImpression(impression, api);
+    public static void trackImpression(@NonNull TrackedEntity impression) {
+        analyticsInternal.trackImpression(impression);
     }
 
     /**
@@ -151,9 +141,5 @@ public class BranchAnalytics {
      */
     public static String getAnalyticsWindowId() {
         return analyticsInternal.sessionId;
-    }
-
-    public interface TrackedEntity {
-        JSONObject getTrackedEntityJson();
     }
 }

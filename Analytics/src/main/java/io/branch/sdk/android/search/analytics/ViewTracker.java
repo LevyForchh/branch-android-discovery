@@ -11,14 +11,12 @@ import android.view.ViewTreeObserver;
 
 import java.lang.ref.WeakReference;
 
-import io.branch.sdk.android.search.analytics.BranchAnalytics.TrackedEntity;
-
 /**
- * This class is responsible for checking {@link TrackedEntity} impressions on Views.
+ * This class is responsible for checking {@link TrackedEntity} impressions on view.
  * See {@link BranchImpressionTracking}.
  */
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-class BranchImpressionTracker {
+class ViewTracker {
 
     // Do not check if we have already checked < CHECK_TIME_MILLIS ago.
     private static final long CHECK_TIME_MILLIS = 80;
@@ -33,7 +31,7 @@ class BranchImpressionTracker {
     private long mLastCheckMillis = 0L;
     private final ViewTreeListener mListener = new ViewTreeListener(this);
 
-    BranchImpressionTracker(@NonNull View view) {
+    ViewTracker(@NonNull View view) {
         mView = view;
         // No one will remove this attach state listener, but we don't need to.
         // This tracker is bound to the view and dies with it. No other tracker
@@ -56,8 +54,7 @@ class BranchImpressionTracker {
 
     void bindTo(@Nullable TrackedEntity result) {
         mResult = result;
-        mHasImpression = result == null
-                || BranchImpressionTracking.hasTrackedImpression(result);
+        mHasImpression = result == null || BranchImpressionTracking.hasTrackedImpression(result);
     }
 
     private void onViewAttached() {
@@ -118,11 +115,11 @@ class BranchImpressionTracker {
                 if (percentage > CHECK_AREA_MIN_FRACTION) {
                     mHasImpression = true;
                     BranchImpressionTracking.recordImpression(mView.getContext(), mResult, percentage);
-                     Log.e("Tracker", "Got impression for [" + mResult.getTrackedEntityJson() + "]");
+                     Log.e("Tracker", "Got impression for [" + mResult.getImpressionJson() + "]");
                 } else {
-                     Log.w("Tracker", "Missed impression for [" + mResult.getTrackedEntityJson() + "]. Percentage: " + percentage
-                            + ". viewWidth:" + mView.getWidth() + " viewHeight:" + mView.getHeight()
-                            + ". visibleWidth:" + mTempRect1.width() + " visibleHeight:" + mTempRect1.height());
+//                     Log.w("Tracker", "Missed impression for [" + mResult.getImpressionJson() + "]. Percentage: " + percentage
+//                            + ". viewWidth:" + mView.getWidth() + " viewHeight:" + mView.getHeight()
+//                            + ". visibleWidth:" + mTempRect1.width() + " visibleHeight:" + mTempRect1.height());
                 }
             }
         }
@@ -140,21 +137,21 @@ class BranchImpressionTracker {
     private static class ViewTreeListener implements
             ViewTreeObserver.OnScrollChangedListener,
             ViewTreeObserver.OnGlobalLayoutListener {
-        private final WeakReference<BranchImpressionTracker> mTracker;
+        private final WeakReference<ViewTracker> mTracker;
 
-        private ViewTreeListener(@NonNull BranchImpressionTracker tracker) {
+        private ViewTreeListener(@NonNull ViewTracker tracker) {
             mTracker = new WeakReference<>(tracker);
         }
 
         @Override
         public void onScrollChanged() {
-            BranchImpressionTracker tracker = mTracker.get();
+            ViewTracker tracker = mTracker.get();
             if (tracker != null) tracker.checkImpression();
         }
 
         @Override
         public void onGlobalLayout() {
-            BranchImpressionTracker tracker = mTracker.get();
+            ViewTracker tracker = mTracker.get();
             if (tracker != null) tracker.checkImpression();
         }
     }

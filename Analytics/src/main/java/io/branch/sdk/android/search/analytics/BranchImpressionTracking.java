@@ -7,8 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.view.View;
 
-import io.branch.sdk.android.search.analytics.BranchAnalytics.TrackedEntity;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,16 +16,13 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 /**
- * Coordinates impression tracking, including managing {@link BranchImpressionTracker}s,
+ * Coordinates impression tracking, including managing {@link ViewTracker}s,
  * batching results and uploading them to server.
  */
 class BranchImpressionTracking {
 
-    // TODO the report URL
-    private static final String REPORT_URL = "https://fakeUrl.fakeUrl";
-
-    private static Map<View, BranchImpressionTracker> sTrackers = new WeakHashMap<>();
-    private static Set<JSONObject> sImpressionIds = new HashSet<>();
+    private static Map<View, ViewTracker> sTrackers = new WeakHashMap<>();
+    private static Set<Integer> sImpressionIds = new HashSet<>();
 
     private static final Object sSendLock = new Object();
 
@@ -36,11 +31,11 @@ class BranchImpressionTracking {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             throw new IllegalStateException("Impression tracking will only work on API 18+.");
         }
-        BranchImpressionTracker tracker;
+        ViewTracker tracker;
         if (sTrackers.containsKey(view)) {
             tracker = sTrackers.get(view);
         } else {
-            tracker = new BranchImpressionTracker(view);
+            tracker = new ViewTracker(view);
             sTrackers.put(view, tracker);
         }
         //noinspection ConstantConditions
@@ -48,27 +43,27 @@ class BranchImpressionTracking {
     }
 
     static boolean hasTrackedImpression(@NonNull TrackedEntity result) {
-        return sImpressionIds.contains(result.getTrackedEntityJson());// todo turn to hashcode for smaller memory use?
+        return sImpressionIds.contains(result.getImpressionJson().hashCode());
     }
 
     static void recordImpression(@NonNull Context context,
                                  @NonNull TrackedEntity result,
                                  float area) {
         // Record the ID so it's not saved twice.
-        boolean isNew = sImpressionIds.add(result.getTrackedEntityJson());
+        boolean isNew = sImpressionIds.add(result.getImpressionJson().hashCode());
         if (!isNew) return;
 
         synchronized (sSendLock) {
             // Record into shared preferences as a simple JSON string.
             JSONObject object = new JSONObject();
             try {
-                object.put("entity", result.getTrackedEntityJson());
+                object.put("entity", result.getImpressionJson());
                 object.put("area", area);
                 object.put("timestamp", System.currentTimeMillis());
             } catch (JSONException e) {
                 return;
             }
-            BranchAnalytics.trackImpression(object, "search");
+            BranchAnalytics.trackImpression(result);
         }
     }
 }

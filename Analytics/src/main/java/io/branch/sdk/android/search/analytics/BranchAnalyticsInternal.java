@@ -28,11 +28,13 @@ class BranchAnalyticsInternal implements LifecycleObserver {
 
     @NonNull String sessionId = BNC_ANALYTICS_NO_VAL;
 
-    // clicks and impressions
+    // default clicks and impressions
     private List<JSONObject> clicks = Collections.synchronizedList(new LinkedList<JSONObject>());
     private List<JSONObject> impressions = Collections.synchronizedList(new LinkedList<JSONObject>());
-    private final HashMap<String, List<JSONObject>> clicksPerApi = new HashMap<>();// e.g. "hints" gives you hints_clicks
-    private final HashMap<String, List<JSONObject>> impressionsPerApi = new HashMap<>();// e.g. "hints" gives you hints_impressions
+
+    // clicks and impressions per API
+    private final HashMap<String, List<JSONObject>> clicksPerApi = new HashMap<>();
+    private final HashMap<String, List<JSONObject>> impressionsPerApi = new HashMap<>();
 
     // custom values
     private final ConcurrentHashMap<String, JSONObject> trackedObjects = new ConcurrentHashMap<>();// e.g. ???
@@ -85,42 +87,46 @@ class BranchAnalyticsInternal implements LifecycleObserver {
     private boolean isEmptySession() {
         // we ignore static payload values
         boolean noClicksOrImpressions = clicks.isEmpty() && impressions.isEmpty() && clicksPerApi.isEmpty() && impressionsPerApi.isEmpty();
-        boolean noCustomValues = trackedObjects.isEmpty() && trackedStrings.isEmpty() && trackedInts.isEmpty() && trackedDoubles.isEmpty() && trackedArrays.isEmpty();
-        return noClicksOrImpressions && noCustomValues;
+        boolean noTrackedValues = trackedObjects.isEmpty() && trackedStrings.isEmpty() && trackedInts.isEmpty() && trackedDoubles.isEmpty() && trackedArrays.isEmpty();
+        return noClicksOrImpressions && noTrackedValues;
     }
 
     private void startUpload(@NonNull JSONObject payload) {
         AnalyticsUtil.makeUpload(payload.toString());
     }
 
-    void registerClickEvent(@NonNull JSONObject click, @Nullable String api) {
-        if (TextUtils.isEmpty(api)) {
+    void registerClick(@NonNull TrackedEntity entity) {
+        if (entity.getClickJson() == null) return;
+
+        if (TextUtils.isEmpty(entity.getAPI())) {
             // write to default clicks
-            clicks.add(click);
+            clicks.add(entity.getClickJson());
         } else {
             synchronized (clicksPerApi) {
-                List<JSONObject> apiClicks = clicksPerApi.get(api);
+                List<JSONObject> apiClicks = clicksPerApi.get(entity.getAPI());
                 if (apiClicks == null) {
                     apiClicks = new LinkedList<JSONObject>();
                 }
-                apiClicks.add(click);
-                clicksPerApi.put(api, apiClicks);
+                apiClicks.add(entity.getClickJson());
+                clicksPerApi.put(entity.getAPI(), apiClicks);
             }
         }
     }
 
-    void trackImpression(@NonNull JSONObject impression, @Nullable String api) {
-        if (TextUtils.isEmpty(api)) {
+    void trackImpression(@NonNull TrackedEntity entity) {
+        if (entity.getImpressionJson() == null) return;
+
+        if (TextUtils.isEmpty(entity.getAPI())) {
             // write to default impressions
-            impressions.add(impression);
+            impressions.add(entity.getImpressionJson());
         } else {
             synchronized (impressionsPerApi) {
-                List<JSONObject> apiImpressions = impressionsPerApi.get(api);
+                List<JSONObject> apiImpressions = impressionsPerApi.get(entity.getAPI());
                 if (apiImpressions == null) {
                     apiImpressions = new LinkedList<JSONObject>();
                 }
-                apiImpressions.add(impression);
-                impressionsPerApi.put(api, apiImpressions);
+                apiImpressions.add(entity.getImpressionJson());
+                impressionsPerApi.put(entity.getAPI(), apiImpressions);
             }
         }
     }
@@ -149,29 +155,29 @@ class BranchAnalyticsInternal implements LifecycleObserver {
                 payload.putOpt(staticObjectEntry.getKey(), staticObjectEntry.getValue());
             }
 
-            // top level: records of unique and uncommon user actions
-            for (Map.Entry<String, String> customStringEntry : trackedStrings.entrySet()) {
-                payload.putOpt(customStringEntry.getKey(), customStringEntry.getValue());
+            // top level: records of user actions
+            for (Map.Entry<String, String> trackedStringEntry : trackedStrings.entrySet()) {
+                payload.putOpt(trackedStringEntry.getKey(), trackedStringEntry.getValue());
             }
-            for (Map.Entry<String, Integer> customIntEntry : trackedInts.entrySet()) {
-                payload.putOpt(customIntEntry.getKey(), customIntEntry.getValue());
+            for (Map.Entry<String, Integer> trackedIntEntry : trackedInts.entrySet()) {
+                payload.putOpt(trackedIntEntry.getKey(), trackedIntEntry.getValue());
             }
-            for (Map.Entry<String, Double> customDoubleEntry : trackedDoubles.entrySet()) {
-                payload.putOpt(customDoubleEntry.getKey(), customDoubleEntry.getValue());
+            for (Map.Entry<String, Double> trackedDoubleEntry : trackedDoubles.entrySet()) {
+                payload.putOpt(trackedDoubleEntry.getKey(), trackedDoubleEntry.getValue());
             }
-            for (Map.Entry<String, JSONArray> customDoubleEntry : trackedArrays.entrySet()) {
-                payload.putOpt(customDoubleEntry.getKey(), customDoubleEntry.getValue());
+            for (Map.Entry<String, JSONArray> trackedDoubleEntry : trackedArrays.entrySet()) {
+                payload.putOpt(trackedDoubleEntry.getKey(), trackedDoubleEntry.getValue());
             }
-            for (Map.Entry<String, JSONObject> customObjectEntry : trackedObjects.entrySet()) {
-                payload.putOpt(customObjectEntry.getKey(), customObjectEntry.getValue());
+            for (Map.Entry<String, JSONObject> trackedObjectEntry : trackedObjects.entrySet()) {
+                payload.putOpt(trackedObjectEntry.getKey(), trackedObjectEntry.getValue());
             }
 
             // 2nd level: records of common user actions that can will be grouped together
-            for (Map.Entry<String, List<JSONObject>> apiClick : clicksPerApi.entrySet()) {
-                payload.putOpt(apiClick.getKey() + "_clicks", new JSONArray(apiClick.getValue()));
+            for (Map.Entry<String, List<JSONObject>> apiClickEntry : clicksPerApi.entrySet()) {
+                payload.putOpt(apiClickEntry.getKey() + "_clicks", new JSONArray(apiClickEntry.getValue()));
             }
-            for (Map.Entry<String, List<JSONObject>> apiImpression : impressionsPerApi.entrySet()) {
-                payload.putOpt(apiImpression.getKey() + "_impressions", new JSONArray(apiImpression.getValue()));
+            for (Map.Entry<String, List<JSONObject>> apiImpressionEntry : impressionsPerApi.entrySet()) {
+                payload.putOpt(apiImpressionEntry.getKey() + "_impressions", new JSONArray(apiImpressionEntry.getValue()));
             }
             // todo validate json when it's being added/tracked anywhere
         } catch (JSONException e) {
@@ -184,24 +190,24 @@ class BranchAnalyticsInternal implements LifecycleObserver {
      * `recordXXX` APIs add the XXX entity to top level of the payload and are treated as records of
      * user behavior, thus `isEmptySession()` will return false if there is even a single record or user behavior
      */
-    void trackObject(@NonNull String key, @NonNull JSONObject customObject) {
-        trackedObjects.put(key, customObject);
+    void trackObject(@NonNull String key, @NonNull JSONObject trackedObject) {
+        trackedObjects.put(key, trackedObject);
     }
 
-    void trackString(@NonNull String key, @NonNull String customString) {
-        trackedStrings.put(key, customString);
+    void trackString(@NonNull String key, @NonNull String trackedString) {
+        trackedStrings.put(key, trackedString);
     }
 
-    void trackInt(@NonNull String key, @NonNull Integer customInt) {
-        trackedInts.put(key, customInt);
+    void trackInt(@NonNull String key, @NonNull Integer trackedInt) {
+        trackedInts.put(key, trackedInt);
     }
 
-    void trackDouble(@NonNull String key, @NonNull Double customDouble) {
-        trackedDoubles.put(key, customDouble);
+    void trackDouble(@NonNull String key, @NonNull Double trackedDouble) {
+        trackedDoubles.put(key, trackedDouble);
     }
 
-    void trackArray(@NonNull String key, @NonNull JSONArray customArray) {
-        trackedArrays.put(key, customArray);
+    void trackArray(@NonNull String key, @NonNull JSONArray trackedArray) {
+        trackedArrays.put(key, trackedArray);
     }
 
     /**
