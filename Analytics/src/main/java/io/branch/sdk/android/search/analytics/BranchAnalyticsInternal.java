@@ -36,7 +36,7 @@ class BranchAnalyticsInternal implements LifecycleObserver {
     private final HashMap<String, List<JSONObject>> clicksPerApi = new HashMap<>();
     private final HashMap<String, List<JSONObject>> impressionsPerApi = new HashMap<>();
 
-    // custom values
+    // tracked values
     private final ConcurrentHashMap<String, JSONObject> trackedObjects = new ConcurrentHashMap<>();// e.g. ???
     private final ConcurrentHashMap<String, String> trackedStrings = new ConcurrentHashMap<>();// e.g. ???
     private final ConcurrentHashMap<String, Integer> trackedInts = new ConcurrentHashMap<>();// e.g. ???

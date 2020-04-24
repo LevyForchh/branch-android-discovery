@@ -75,7 +75,7 @@ public class BranchAnalytics {
         analyticsInternal.registerClick(click);
     }
 
-    public static void trackImpression(@NonNull TrackedEntity impression) {
+    static void trackImpression(@NonNull TrackedEntity impression) {
         analyticsInternal.trackImpression(impression);
     }
 
@@ -109,23 +109,23 @@ public class BranchAnalytics {
      * and not related to the user behavior. If static data is the only data passed to analytics during
      * this session, we will treat it as an empty session and will not make the upload to the servers.
      */
-    void addObject(@NonNull String key, @NonNull JSONObject staticObject) {
+    public void addObject(@NonNull String key, @NonNull JSONObject staticObject) {
         analyticsInternal.addObject(key, staticObject);// (e.g. 'device_info', 'sdk_configuration')
     }
 
-    void addString(@NonNull String key, @NonNull String staticString) {
+    public void addString(@NonNull String key, @NonNull String staticString) {
         analyticsInternal.addString(key, staticString);// (e.g. 'branch_key')
     }
 
-    void addInt(@NonNull String key, @NonNull Integer staticInt) {
+    public void addInt(@NonNull String key, @NonNull Integer staticInt) {
         analyticsInternal.addInt(key, staticInt);// (e.g. ??)
     }
 
-    void addDouble(@NonNull String key, @NonNull Double staticDouble) {
+    public void addDouble(@NonNull String key, @NonNull Double staticDouble) {
         analyticsInternal.addDouble(key, staticDouble);// (e.g. ???)
     }
 
-    void addArray(@NonNull String key, @NonNull JSONArray staticArray) {
+    public void addArray(@NonNull String key, @NonNull JSONArray staticArray) {
         analyticsInternal.addArray(key, staticArray);// (e.g. ???)
     }
 
