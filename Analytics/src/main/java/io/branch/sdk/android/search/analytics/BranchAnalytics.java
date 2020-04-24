@@ -3,8 +3,11 @@ package io.branch.sdk.android.search.analytics;
 import android.app.Application;
 import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Context;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+import android.view.View;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -144,5 +147,11 @@ public class BranchAnalytics {
      */
     public static String getAnalyticsWindowId() {
         return analyticsInternal.sessionId;
+    }
+
+    public static void trackImpressions(@NonNull View view, @NonNull TrackedEntity result) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            BranchImpressionTracking.trackImpressions(view, result);
+        }
     }
 }

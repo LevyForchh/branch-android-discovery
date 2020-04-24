@@ -34,7 +34,7 @@ dependencies {
     // 17.0.0 exists, but it brings in AndroidX which breaks everything unless we migrate as well.
     implementation 'com.google.android.gms:play-services-location:16.0.0'
 
-    implementation project(':BranchSearchSDK')
+    api project(':BranchSearchSDK')
 //    implementation fileTree(dir: '../Archives', include: ['BranchSearchSDK_v'+project.VERSION_NAME+'.jar'])
 }
 

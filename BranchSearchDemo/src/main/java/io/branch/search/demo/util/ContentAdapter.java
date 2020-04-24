@@ -1,6 +1,7 @@
 package io.branch.search.demo.util;
 
 import android.content.Context;
+import android.os.Build;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -9,6 +10,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import io.branch.sdk.android.search.analytics.BranchAnalytics;
+import io.branch.sdk.android.search.analytics.TrackedEntity;
 import io.branch.search.BranchAppResult;
 import io.branch.search.BranchLinkResult;
 import io.branch.search.BranchSearchResult;
@@ -62,6 +65,7 @@ public class ContentAdapter extends BaseAdapter {
             BranchAppResult appResult = (BranchAppResult)result;
             ((ContentItem) convertView).showAppHeader(appResult);
         }
+        BranchAnalytics.trackImpressions(convertView, (TrackedEntity) convertView.getTag());
         return convertView;
     }
 

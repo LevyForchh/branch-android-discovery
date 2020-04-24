@@ -39,7 +39,7 @@ dependencies {
     // Newer versions exist, but they are API21+ only.
     implementation 'com.squareup.okhttp3:okhttp:3.12.6'
 
-    implementation project(':Analytics')
+    api project(':Analytics')
 
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test:rules:1.0.2'

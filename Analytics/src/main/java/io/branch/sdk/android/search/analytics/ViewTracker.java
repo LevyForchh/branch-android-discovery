@@ -52,9 +52,9 @@ class ViewTracker {
         }
     }
 
-    void bindTo(@Nullable TrackedEntity result) {
+    void bindTo(@NonNull TrackedEntity result) {
         mResult = result;
-        mHasImpression = result == null || BranchImpressionTracking.hasTrackedImpression(result);
+        mHasImpression = BranchImpressionTracking.hasTrackedImpression(result);
     }
 
     private void onViewAttached() {

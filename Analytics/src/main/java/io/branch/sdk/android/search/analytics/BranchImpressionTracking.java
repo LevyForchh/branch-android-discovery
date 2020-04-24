@@ -27,7 +27,7 @@ class BranchImpressionTracking {
     private static final Object sSendLock = new Object();
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    static void trackImpressions(@NonNull View view, @Nullable TrackedEntity result) {
+    static void trackImpressions(@NonNull View view, @NonNull TrackedEntity result) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2) {
             throw new IllegalStateException("Impression tracking will only work on API 18+.");
         }
