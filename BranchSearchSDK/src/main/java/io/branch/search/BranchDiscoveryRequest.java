@@ -17,6 +17,7 @@ import java.util.Map;
 public class BranchDiscoveryRequest<T extends BranchDiscoveryRequest> {
 
     final static String KEY_REQUEST_ID = "request_id";
+    final static String KEY_RESULT_ID = "result_id";
     final static String KEY_TIMESTAMP = "utc_timestamp";
     // We want to override the configuration-level extras
     final static String KEY_EXTRA = BranchConfiguration.JSONKey.RequestExtra.toString();

@@ -39,7 +39,7 @@ public class BranchLinkHandlerTest extends BranchTest {
 
         JSONObject linkJson = load("link_example");
         link = BranchLinkResult.createFromJson(linkJson, "Sample App",
-                "com.sample", "", "");
+                "com.sample", "", "", "", "");
         Assert.assertNotNull(link);
 
         Intents.init();

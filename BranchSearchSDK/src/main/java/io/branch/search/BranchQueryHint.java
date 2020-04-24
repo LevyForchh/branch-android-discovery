@@ -9,9 +9,10 @@ import org.json.JSONObject;
 
 import io.branch.sdk.android.search.analytics.TrackedEntity;
 
-import static io.branch.search.Defines.AnalyticsJsonKey.Hint;
-import static io.branch.search.Defines.AnalyticsJsonKey.Hints;
-import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.Hint;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.Hints;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.ResultId;
 
 /**
  * Represents a single query hint result.
@@ -19,10 +20,12 @@ import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
 public class BranchQueryHint implements Parcelable, TrackedEntity {
     private final String query;
     private final String requestId;
+    private final String resultId;
 
-    BranchQueryHint(@NonNull String query, @NonNull String requestId) {
+    BranchQueryHint(@NonNull String query, @NonNull String requestId, @NonNull String resultId) {
         this.query = query;
         this.requestId = requestId;
+        this.resultId = resultId;
     }
 
     @NonNull
@@ -33,6 +36,11 @@ public class BranchQueryHint implements Parcelable, TrackedEntity {
     @NonNull
     public String getRequestId() {
         return requestId;
+    }
+
+    @NonNull
+    public String getResultId() {
+        return resultId;
     }
 
     @NonNull
@@ -59,6 +67,7 @@ public class BranchQueryHint implements Parcelable, TrackedEntity {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(query);
         dest.writeString(requestId);
+        dest.writeString(resultId);
     }
 
     public final static Creator<BranchQueryHint> CREATOR = new Creator<BranchQueryHint>() {
@@ -67,7 +76,8 @@ public class BranchQueryHint implements Parcelable, TrackedEntity {
             //noinspection ConstantConditions
             String hint = source.readString();
             String requestId = source.readString();
-            return new BranchQueryHint(hint, requestId);
+            String resultId = source.readString();
+            return new BranchQueryHint(hint, requestId, resultId);
         }
 
         @Override
@@ -82,6 +92,7 @@ public class BranchQueryHint implements Parcelable, TrackedEntity {
         try {
             impression.putOpt(Hint.getKey(), getQuery());
             impression.putOpt(RequestId.getKey(), getRequestId());
+            impression.putOpt(ResultId.getKey(), getResultId());
         } catch (JSONException ignored) {}
         return impression;
     }
@@ -92,6 +103,7 @@ public class BranchQueryHint implements Parcelable, TrackedEntity {
         try {
             click.putOpt(Hint.getKey(), getQuery());
             click.putOpt(RequestId.getKey(), getRequestId());
+            click.putOpt(ResultId.getKey(), getResultId());
         } catch (JSONException ignored) {}
         return click;
     }

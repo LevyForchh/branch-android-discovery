@@ -1,30 +1,26 @@
 package io.branch.search;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import io.branch.sdk.android.search.analytics.BranchAnalytics;
 import io.branch.sdk.android.search.analytics.TrackedEntity;
 
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.ResultId;
 import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
-import static io.branch.search.Defines.AnalyticsJsonKey.EntityId;
-import static io.branch.search.Defines.AnalyticsJsonKey.Hint;
-import static io.branch.search.Defines.AnalyticsJsonKey.Hints;
-import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
-import static io.branch.search.Defines.AnalyticsJsonKey.Search;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.Search;
+import static io.branch.search.BranchDiscoveryRequest.KEY_RESULT_ID;
 
 /**
  * Application Result.
@@ -167,7 +163,7 @@ public class BranchAppResult implements Parcelable, TrackedEntity {
      * @return BranchSearchError Return  {@link BranchSearchError} in case of an error else null
      */
     public BranchSearchError openApp(Context context, boolean fallbackToPlayStore) {
-        BranchAnalytics.trackClick(this, BranchLinkResult.LinkResultClickType.Content.toString());
+        BranchAnalytics.trackClick(this, BranchLinkResult.ClickType.Content.toString());
         return Util.openApp(context,fallbackToPlayStore, app_store_id)? null : new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
     }
 
@@ -219,13 +215,16 @@ public class BranchAppResult implements Parcelable, TrackedEntity {
         List<BranchLinkResult> links = new ArrayList<>();
         if (linksJson != null) {
             for (int j = 0; j < linksJson.length(); j++) {
+                JSONObject linkResult = linksJson.optJSONObject(j);
+                if (linkResult == null) continue;
                 BranchLinkResult link = BranchLinkResult.createFromJson(
-                        linksJson.optJSONObject(j),
+                        linkResult,
                         name,
                         packageName,
                         iconUrl,
                         deepviewExtraText,
-                        requestId);
+                        requestId,
+                        linkResult.optString(KEY_RESULT_ID));
                 if (link != null) {
                     links.add(link);
                 }
@@ -250,7 +249,7 @@ public class BranchAppResult implements Parcelable, TrackedEntity {
     public JSONObject getImpressionJson() {
         JSONObject impression = new JSONObject();
         try {
-            impression.putOpt(EntityId.getKey(), app_store_id);
+            impression.putOpt(ResultId.getKey(), app_store_id);
             impression.putOpt(RequestId.getKey(), getRequestId());
         } catch (JSONException ignored) {}
         return impression;
@@ -260,7 +259,7 @@ public class BranchAppResult implements Parcelable, TrackedEntity {
     public JSONObject getClickJson() {
         JSONObject click = new JSONObject();
         try {
-            click.putOpt(EntityId.getKey(), app_store_id);
+            click.putOpt(ResultId.getKey(), app_store_id);
             click.putOpt(RequestId.getKey(), getRequestId());
         } catch (JSONException ignored) {}
         return click;

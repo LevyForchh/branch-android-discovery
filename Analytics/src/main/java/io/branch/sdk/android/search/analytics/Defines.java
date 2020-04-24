@@ -1,4 +1,4 @@
-package io.branch.search;
+package io.branch.sdk.android.search.analytics;
 
 public class Defines {
 
@@ -15,12 +15,12 @@ public class Defines {
         ConfigInfo("config_info"),
         EmptySessions("empty_sessions"),
         RequestId("request_id"),
+        ResultId("result_id"),
         Timestamp("timestamp"),
         Hint("hint"),
         Autosuggestion("autosuggestion"),
         Rank("rank"),
         ClickType("click_type"),
-        EntityId("entity_id"),
         VirtualRequest("virtual_request"),
         Area("area"),
         StartTime("start_time"),

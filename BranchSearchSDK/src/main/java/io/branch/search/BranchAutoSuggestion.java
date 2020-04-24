@@ -9,10 +9,10 @@ import org.json.JSONObject;
 
 import io.branch.sdk.android.search.analytics.TrackedEntity;
 
-import static io.branch.search.Defines.AnalyticsJsonKey.Autosuggest;
-import static io.branch.search.Defines.AnalyticsJsonKey.Autosuggestion;
-import static io.branch.search.Defines.AnalyticsJsonKey.Hint;
-import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.Autosuggest;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.Autosuggestion;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.ResultId;
 
 /**
  * Represents a single auto suggest result.
@@ -20,10 +20,12 @@ import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
 public class BranchAutoSuggestion implements Parcelable, TrackedEntity {
     private final String query;
     private final String requestId;
+    private final String resultId;
 
-    BranchAutoSuggestion(@NonNull String query, @NonNull String requestId) {
+    BranchAutoSuggestion(@NonNull String query, @NonNull String requestId, @NonNull String resultId) {
         this.query = query;
         this.requestId = requestId;
+        this.resultId = resultId;
     }
 
     @NonNull
@@ -40,6 +42,11 @@ public class BranchAutoSuggestion implements Parcelable, TrackedEntity {
     @NonNull
     public String getRequestId() {
         return requestId;
+    }
+
+    @NonNull
+    public String getResultId() {
+        return resultId;
     }
 
     /**
@@ -60,6 +67,7 @@ public class BranchAutoSuggestion implements Parcelable, TrackedEntity {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(query);
         dest.writeString(requestId);
+        dest.writeString(resultId);
     }
 
     public final static Creator<BranchAutoSuggestion> CREATOR = new Creator<BranchAutoSuggestion>() {
@@ -68,7 +76,8 @@ public class BranchAutoSuggestion implements Parcelable, TrackedEntity {
             //noinspection ConstantConditions
             String query = source.readString();
             String requestId = source.readString();
-            return new BranchAutoSuggestion(query, requestId);
+            String resultId = source.readString();
+            return new BranchAutoSuggestion(query, requestId, resultId);
         }
 
         @Override
@@ -83,6 +92,7 @@ public class BranchAutoSuggestion implements Parcelable, TrackedEntity {
         try {
             impression.putOpt(Autosuggestion.getKey(), getQuery());
             impression.putOpt(RequestId.getKey(), getRequestId());
+            impression.putOpt(ResultId.getKey(), getResultId());
         } catch (JSONException ignored) {}
         return impression;
     }
@@ -93,6 +103,7 @@ public class BranchAutoSuggestion implements Parcelable, TrackedEntity {
         try {
             click.putOpt(Autosuggestion.getKey(), getQuery());
             click.putOpt(RequestId.getKey(), getRequestId());
+            click.putOpt(ResultId.getKey(), getResultId());
         } catch (JSONException ignored) {}
         return click;
     }

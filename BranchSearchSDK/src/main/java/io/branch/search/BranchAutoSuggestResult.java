@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
+import static io.branch.sdk.android.search.analytics.Defines.AnalyticsJsonKey.ResultId;
 
 /**
  * Represents results of an auto suggest query started from
@@ -19,6 +20,7 @@ import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
  */
 public class BranchAutoSuggestResult implements Parcelable {
     private static final String KEY_RESULTS = "results";
+    private static final String KEY_SUGGESTION = "suggestion";
 
     private final List<BranchAutoSuggestion> suggestions;
     private final String requestId;
@@ -41,7 +43,11 @@ public class BranchAutoSuggestResult implements Parcelable {
             JSONArray jsonArray = jsonObject.optJSONArray(KEY_RESULTS);
             if (jsonArray != null) {
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    suggestions.add(new BranchAutoSuggestion(jsonArray.getString(i)));
+                    JSONObject autoSuggestion = jsonArray.getJSONObject(i);
+                    suggestions.add(new BranchAutoSuggestion(
+                            autoSuggestion.getString(KEY_SUGGESTION),
+                            requestId,
+                            autoSuggestion.getString(ResultId.getKey())));
                 }
             }
         } catch (JSONException ignore) { }

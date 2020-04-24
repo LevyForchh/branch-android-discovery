@@ -4,6 +4,7 @@ import android.app.Application;
 import android.arch.lifecycle.ProcessLifecycleOwner;
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -71,11 +72,13 @@ public class BranchAnalytics {
      * Use APIs registerClickEvent and registerImpressionEvent to register default clicks and events,
      * or split them up in the payload by "clickCategory" and "impressionCategory"
      */
-    public static void trackClick(@NonNull TrackedEntity click, String clickType) {
+    public static void trackClick(@NonNull TrackedEntity click, @NonNull String clickType) {
+        if (click.getClickJson() == null) return;
         analyticsInternal.registerClick(click, clickType);
     }
 
     static void trackImpression(@NonNull TrackedEntity impression) {
+        if (impression.getImpressionJson() == null) return;
         analyticsInternal.trackImpression(impression);
     }
 

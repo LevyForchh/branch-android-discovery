@@ -96,9 +96,9 @@ class BranchAnalyticsInternal implements LifecycleObserver {
     }
 
     void registerClick(@NonNull TrackedEntity entity, @NonNull String clickType) {
-        if (entity.getClickJson() == null) return;
-
         JSONObject clickJson = entity.getClickJson();
+        if (clickJson == null) return;
+
         try {
             clickJson.putOpt("click_type", clickType);
         } catch (JSONException ignored) { }

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
+import static io.branch.search.BranchDiscoveryRequest.KEY_RESULT_ID;
 
 /**
  * Represents results of a query hint query started from
@@ -19,6 +20,7 @@ import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
  */
 public class BranchQueryHintResult implements Parcelable {
     private static final String KEY_RESULTS = "results";
+    private static final String KEY_SUGGESTION = "suggestion";
 
     private final List<BranchQueryHint> hints;
     private String requestId;
@@ -33,10 +35,6 @@ public class BranchQueryHintResult implements Parcelable {
         return hints;
     }
 
-    /**
-     * Used by {@link io.branch.sdk.android.search.analytics.ViewTracker} to remove duplicate impressions.
-     * @return the request id
-     */
     @NonNull
     String getRequestId() {
         return requestId;
@@ -50,7 +48,11 @@ public class BranchQueryHintResult implements Parcelable {
             JSONArray jsonArray = jsonObject.optJSONArray(KEY_RESULTS);
             if (jsonArray != null) {
                 for (int i = 0; i < jsonArray.length(); i++) {
-                    hints.add(new BranchQueryHint(jsonArray.getString(i), requestId));
+                    JSONObject hintResult = jsonArray.getJSONObject(i);
+                    hints.add(new BranchQueryHint(
+                            hintResult.getString(KEY_SUGGESTION),
+                            requestId,
+                            hintResult.getString(KEY_RESULT_ID)));
                 }
             }
         } catch (JSONException ignore) { }

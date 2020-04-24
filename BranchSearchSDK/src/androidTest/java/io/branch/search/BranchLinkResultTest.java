@@ -22,7 +22,7 @@ public class BranchLinkResultTest extends BranchTest {
         // Create a BranchLinkResult from sample JSON
         JSONObject json = new JSONObject(AssetUtils.readJsonFile(getTestContext(), "link_example.json"));
         BranchLinkResult link1 = BranchLinkResult.createFromJson(json,
-                "appName", "appStoreId", "appIconUrl", "");
+                "appName", "appStoreId", "appIconUrl", "", "", "");
         Assert.assertNotNull(link1);
 
         // Ensure missing fields are actually ""s, and the others were correctly set.
