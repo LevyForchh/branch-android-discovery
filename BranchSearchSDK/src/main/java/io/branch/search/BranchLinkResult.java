@@ -26,10 +26,19 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import io.branch.sdk.android.search.analytics.BranchAnalytics;
+import io.branch.sdk.android.search.analytics.TrackedEntity;
+
+import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
+import static io.branch.search.Defines.AnalyticsJsonKey.EntityId;
+import static io.branch.search.Defines.AnalyticsJsonKey.Hint;
+import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.search.Defines.AnalyticsJsonKey.Search;
+
 /**
  * Class for representing a a deep link to content
  */
-public class BranchLinkResult implements Parcelable {
+public class BranchLinkResult implements Parcelable, TrackedEntity {
     public static final String ICON_CATEGORY_BUSINESS = "business";
     public static final String ICON_CATEGORY_CARS = "cars";
     public static final String ICON_CATEGORY_COMMUNICATION = "communication";
@@ -94,6 +103,7 @@ public class BranchLinkResult implements Parcelable {
     private String click_tracking_url;
     private String icon_category;
     String deepview_extra_text; /* read by BranchLinkHandler.DeepView */
+    private String request_id;
     private final List<BranchLinkHandler> handlers = new ArrayList<>();
 
     private BranchLinkResult() {
@@ -161,6 +171,10 @@ public class BranchLinkResult implements Parcelable {
         return routing_mode;
     }
 
+    public String getRequestId() {
+        return request_id;
+    }
+
     /**
      * If present, returns an Uri backed by an app-specific scheme that can
      * deep link into the app.
@@ -220,14 +234,19 @@ public class BranchLinkResult implements Parcelable {
      * which item was clicked, improving the rankings and personalization over time
      */
     @SuppressWarnings("WeakerAccess")
-    public void registerClickEvent() {
-
+    public void registerClickEvent(LinkResultClickType type) {
+        BranchAnalytics.trackClick(this, type.toString());
         if (!TextUtils.isEmpty(click_tracking_url)) {
             // Fire off an async click event
             BranchSearch.getInstance()
                     .getNetworkHandler(BranchSearch.Channel.SEARCH)
                     .executeGet(click_tracking_url, null);
         }
+    }
+
+    public enum LinkResultClickType {
+        Content,
+        Deepview
     }
 
     /**
@@ -242,7 +261,7 @@ public class BranchLinkResult implements Parcelable {
     @Deprecated
     @Nullable
     public BranchSearchError openDeepView(@NonNull FragmentManager manager) {
-        registerClickEvent();
+        registerClickEvent(LinkResultClickType.Deepview);
         try {
             BranchDeepViewFragment fragment = createDeepViewFragmentForLegacyAPIs();
             fragment.getInstance().show(manager, BranchDeepViewFragment.TAG);
@@ -266,7 +285,7 @@ public class BranchLinkResult implements Parcelable {
     public BranchSearchError openDeepView(@NonNull android.app.FragmentManager manager) {
         // Legacy signature of openDeepView() that uses the old, deprecated FragmentManager,
         // for ooold apps that do not want to update their activity to FragmentActivity.
-        registerClickEvent();
+        registerClickEvent(LinkResultClickType.Deepview);
         try {
             BranchDeepViewFragment fragment = createDeepViewFragmentForLegacyAPIs();
             fragment.getLegacyInstance().show(manager, BranchDeepViewFragment.TAG);
@@ -330,7 +349,7 @@ public class BranchLinkResult implements Parcelable {
      */
     @Nullable
     public BranchSearchError open(@NonNull Context context) {
-        registerClickEvent();
+        registerClickEvent(LinkResultClickType.Content);
         for (BranchLinkHandler handler : handlers) {
             // let's validate again before opening: something might have changed.
             boolean open = handler.validate(context, this)
@@ -346,7 +365,8 @@ public class BranchLinkResult implements Parcelable {
                                            @NonNull String appName,
                                            @NonNull String appPackageName,
                                            @NonNull String appIconUrl,
-                                           @NonNull String appDeepviewExtraText) {
+                                           @NonNull String appDeepviewExtraText,
+                                           @NonNull String requestId) {
         BranchLinkResult link = new BranchLinkResult();
         link.entity_id = Util.optString(json, LINK_ENTITY_ID_KEY);
         link.type = Util.optString(json, LINK_TYPE_KEY);
@@ -366,8 +386,8 @@ public class BranchLinkResult implements Parcelable {
 
         link.click_tracking_url = Util.optString(json, LINK_TRACKING_KEY);
         link.icon_category = json.optString(LINK_ICON_CATEGORY, ICON_CATEGORY_OTHER);
-        link.deepview_extra_text = json.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY,
-                appDeepviewExtraText);
+        link.deepview_extra_text = json.optString(LINK_DEEPVIEW_EXTRA_TEXT_KEY, appDeepviewExtraText);
+        link.request_id = requestId;
 
         JSONArray handlers = json.optJSONArray(LINK_HANDLERS);
         if (handlers != null) {
@@ -412,6 +432,7 @@ public class BranchLinkResult implements Parcelable {
         dest.writeString(this.click_tracking_url);
         dest.writeString(this.icon_category);
         dest.writeString(this.deepview_extra_text);
+        dest.writeString(this.request_id);
         dest.writeTypedList(this.handlers);
     }
 
@@ -436,6 +457,7 @@ public class BranchLinkResult implements Parcelable {
         this.click_tracking_url = in.readString();
         this.icon_category = in.readString();
         this.deepview_extra_text = in.readString();
+        this.request_id = in.readString();
         in.readTypedList(this.handlers, BranchLinkHandler.CREATOR);
     }
 
@@ -451,4 +473,29 @@ public class BranchLinkResult implements Parcelable {
         }
     };
 
+
+    @Override
+    public JSONObject getImpressionJson() {
+        JSONObject impression = new JSONObject();
+        try {
+            impression.putOpt(EntityId.getKey(), getEntityID());
+            impression.putOpt(RequestId.getKey(), getRequestId());
+        } catch (JSONException ignored) {}
+        return impression;
+    }
+
+    @Override
+    public JSONObject getClickJson() {
+        JSONObject click = new JSONObject();
+        try {
+            click.putOpt(EntityId.getKey(), getEntityID());
+            click.putOpt(RequestId.getKey(), getRequestId());
+        } catch (JSONException ignored) {}
+        return click;
+    }
+
+    @Override
+    public String getAPI() {
+        return Search.getKey();
+    }
 }

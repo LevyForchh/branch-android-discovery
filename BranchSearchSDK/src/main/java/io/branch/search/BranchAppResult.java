@@ -9,17 +9,29 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import io.branch.sdk.android.search.analytics.BranchAnalytics;
+import io.branch.sdk.android.search.analytics.TrackedEntity;
+
+import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
+import static io.branch.search.Defines.AnalyticsJsonKey.EntityId;
+import static io.branch.search.Defines.AnalyticsJsonKey.Hint;
+import static io.branch.search.Defines.AnalyticsJsonKey.Hints;
+import static io.branch.search.Defines.AnalyticsJsonKey.RequestId;
+import static io.branch.search.Defines.AnalyticsJsonKey.Search;
+
 /**
  * Application Result.
  * Contains enough information to open the app or fall back to the play store.
  */
-public class BranchAppResult implements Parcelable {
+public class BranchAppResult implements Parcelable, TrackedEntity {
+    private static final String LINK_ENTITY_ID_KEY = "entity_id";
     private static final String KEY_APP_NAME = "app_name";
     private static final String KEY_APP_STORE_ID = "app_store_id";
     private static final String KEY_APP_ICON_URL = "app_icon_url";
@@ -35,17 +47,20 @@ public class BranchAppResult implements Parcelable {
     private String ranking_hint;
     private final float score;
     private final List<BranchLinkResult> deep_links;
+    private String request_id;
 
     BranchAppResult(String appStoreID, String appName, String appIconUrl,
                     @NonNull String rankingHint,
                     float score,
-                    @NonNull List<BranchLinkResult> deep_links) {
+                    @NonNull List<BranchLinkResult> deep_links,
+                    @NonNull String requestId) {
         this.app_store_id = appStoreID;
         this.app_name = appName;
         this.app_icon_url = appIconUrl;
         this.ranking_hint = rankingHint;
         this.deep_links = deep_links;
         this.score = score;
+        this.request_id = requestId;
     }
 
     /**
@@ -99,6 +114,13 @@ public class BranchAppResult implements Parcelable {
     @NonNull
     public List<BranchLinkResult> getDeepLinks() { return this.deep_links; }
 
+    /**
+     * @return the request ID.
+     */
+    public String getRequestId() {
+        return this.request_id;
+    }
+
     //---- Parcelable implementation -------//
     @Override
     public int describeContents() {
@@ -113,6 +135,7 @@ public class BranchAppResult implements Parcelable {
         dest.writeString(this.ranking_hint);
         dest.writeFloat(this.score);
         dest.writeTypedList(this.deep_links);
+        dest.writeString(this.request_id);
     }
 
     private BranchAppResult(Parcel in) {
@@ -122,6 +145,7 @@ public class BranchAppResult implements Parcelable {
         this.ranking_hint = in.readString();
         this.score = in.readFloat();
         this.deep_links = in.createTypedArrayList(BranchLinkResult.CREATOR);
+        this.request_id = in.readString();
     }
 
     public static final Creator<BranchAppResult> CREATOR = new Creator<BranchAppResult>() {
@@ -143,6 +167,7 @@ public class BranchAppResult implements Parcelable {
      * @return BranchSearchError Return  {@link BranchSearchError} in case of an error else null
      */
     public BranchSearchError openApp(Context context, boolean fallbackToPlayStore) {
+        BranchAnalytics.trackClick(this, BranchLinkResult.LinkResultClickType.Content.toString());
         return Util.openApp(context,fallbackToPlayStore, app_store_id)? null : new BranchSearchError(BranchSearchError.ERR_CODE.ROUTING_ERR_UNABLE_TO_OPEN_APP);
     }
 
@@ -185,6 +210,7 @@ public class BranchAppResult implements Parcelable {
         float score = (float) json.optDouble(KEY_APP_SCORE, 0.0);
         String rankingHint = Util.optString(json, KEY_RANKING_HINT);
         String deepviewExtraText = Util.optString(json, KEY_DEEPVIEW_EXTRA_TEXT);
+        String requestId = Util.optString(json, KEY_REQUEST_ID);
         Context appContext = BranchSearch.getInstance().getApplicationContext();
         boolean isInstalled = Util.isAppInstalled(appContext, packageName);
 
@@ -198,7 +224,8 @@ public class BranchAppResult implements Parcelable {
                         name,
                         packageName,
                         iconUrl,
-                        deepviewExtraText);
+                        deepviewExtraText,
+                        requestId);
                 if (link != null) {
                     links.add(link);
                 }
@@ -215,8 +242,33 @@ public class BranchAppResult implements Parcelable {
         if (links.isEmpty()) {
             return null;
         } else {
-            return new BranchAppResult(packageName, name, iconUrl, rankingHint, score, links);
+            return new BranchAppResult(packageName, name, iconUrl, rankingHint, score, links, requestId);
         }
+    }
+
+    @Override
+    public JSONObject getImpressionJson() {
+        JSONObject impression = new JSONObject();
+        try {
+            impression.putOpt(EntityId.getKey(), app_store_id);
+            impression.putOpt(RequestId.getKey(), getRequestId());
+        } catch (JSONException ignored) {}
+        return impression;
+    }
+
+    @Override
+    public JSONObject getClickJson() {
+        JSONObject click = new JSONObject();
+        try {
+            click.putOpt(EntityId.getKey(), app_store_id);
+            click.putOpt(RequestId.getKey(), getRequestId());
+        } catch (JSONException ignored) {}
+        return click;
+    }
+
+    @Override
+    public String getAPI() {
+        return Search.getKey();
     }
 }
 

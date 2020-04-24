@@ -95,19 +95,24 @@ class BranchAnalyticsInternal implements LifecycleObserver {
         AnalyticsUtil.makeUpload(payload.toString());
     }
 
-    void registerClick(@NonNull TrackedEntity entity) {
+    void registerClick(@NonNull TrackedEntity entity, @NonNull String clickType) {
         if (entity.getClickJson() == null) return;
+
+        JSONObject clickJson = entity.getClickJson();
+        try {
+            clickJson.putOpt("click_type", clickType);
+        } catch (JSONException ignored) { }
 
         if (TextUtils.isEmpty(entity.getAPI())) {
             // write to default clicks
-            clicks.add(entity.getClickJson());
+            clicks.add(clickJson);
         } else {
             synchronized (clicksPerApi) {
                 List<JSONObject> apiClicks = clicksPerApi.get(entity.getAPI());
                 if (apiClicks == null) {
                     apiClicks = new LinkedList<JSONObject>();
                 }
-                apiClicks.add(entity.getClickJson());
+                apiClicks.add(clickJson);
                 clicksPerApi.put(entity.getAPI(), apiClicks);
             }
         }

@@ -71,8 +71,8 @@ public class BranchAnalytics {
      * Use APIs registerClickEvent and registerImpressionEvent to register default clicks and events,
      * or split them up in the payload by "clickCategory" and "impressionCategory"
      */
-    public static void trackClick(@NonNull TrackedEntity click) {
-        analyticsInternal.registerClick(click);
+    public static void trackClick(@NonNull TrackedEntity click, String clickType) {
+        analyticsInternal.registerClick(click, clickType);
     }
 
     static void trackImpression(@NonNull TrackedEntity impression) {

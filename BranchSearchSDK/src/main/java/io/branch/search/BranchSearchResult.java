@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -22,13 +23,16 @@ public class BranchSearchResult {
     private final BranchSearchRequest query;
     private final String correctedQuery;
     private final List<BranchAppResult> results;
+    private final String requestId;
 
     private BranchSearchResult(@NonNull BranchSearchRequest query,
                                @Nullable String correctedQuery,
-                               @NonNull List<BranchAppResult> results) {
+                               @NonNull List<BranchAppResult> results,
+                               @NonNull String requestId) {
         this.query = query;
         this.correctedQuery = correctedQuery;
         this.results = results;
+        this.requestId = requestId;
     }
 
     /**
@@ -66,6 +70,10 @@ public class BranchSearchResult {
         if (json.has(KEY_CORRECTED_QUERY)) {
             correctedQuery = json.optString(KEY_CORRECTED_QUERY);
         }
+        @NonNull String requestId = "";
+        if (json.has(KEY_REQUEST_ID)) {
+            requestId = json.optString(KEY_REQUEST_ID);
+        }
         List<BranchAppResult> results = new ArrayList<>();
         if (json.optBoolean(KEY_SUCCESS)) {
             JSONArray resultsJson = json.optJSONArray(KEY_RESULTS);
@@ -73,6 +81,12 @@ public class BranchSearchResult {
                 for (int i = 0; i < resultsJson.length(); i++) {
                     JSONObject resultJson = resultsJson.optJSONObject(i);
                     if (resultJson == null) continue;
+
+                    try {
+                        // add request id to individual BranchAppResult json
+                        resultJson.putOpt(KEY_REQUEST_ID, requestId);
+                    } catch (JSONException ignored) {}
+
                     BranchAppResult result = BranchAppResult.createFromJson(resultJson);
                     if (result != null) {
                         results.add(result);
@@ -80,6 +94,6 @@ public class BranchSearchResult {
                 }
             }
         }
-        return new BranchSearchResult(query, correctedQuery, results);
+        return new BranchSearchResult(query, correctedQuery, results, requestId);
     }
 }

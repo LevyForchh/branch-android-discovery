@@ -11,6 +11,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.branch.search.BranchDiscoveryRequest.KEY_REQUEST_ID;
+
 /**
  * Represents results of an auto suggest query started from
  * {@link BranchSearch#autoSuggest(BranchAutoSuggestRequest, IBranchAutoSuggestEvents)}.
@@ -19,9 +21,11 @@ public class BranchAutoSuggestResult implements Parcelable {
     private static final String KEY_RESULTS = "results";
 
     private final List<BranchAutoSuggestion> suggestions;
+    private final String requestId;
 
-    private BranchAutoSuggestResult(@NonNull List<BranchAutoSuggestion> suggestions) {
+    private BranchAutoSuggestResult(@NonNull List<BranchAutoSuggestion> suggestions, @NonNull String requestId) {
         this.suggestions = suggestions;
+        this.requestId = requestId;
     }
 
     @NonNull
@@ -32,6 +36,7 @@ public class BranchAutoSuggestResult implements Parcelable {
     @NonNull
     static BranchAutoSuggestResult createFromJson(@NonNull JSONObject jsonObject) {
         List<BranchAutoSuggestion> suggestions = new ArrayList<>();
+        String requestId = jsonObject.optString(KEY_REQUEST_ID);
         try {
             JSONArray jsonArray = jsonObject.optJSONArray(KEY_RESULTS);
             if (jsonArray != null) {
@@ -40,7 +45,7 @@ public class BranchAutoSuggestResult implements Parcelable {
                 }
             }
         } catch (JSONException ignore) { }
-        return new BranchAutoSuggestResult(suggestions);
+        return new BranchAutoSuggestResult(suggestions, requestId);
     }
 
     @Override
@@ -51,6 +56,7 @@ public class BranchAutoSuggestResult implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeTypedList(suggestions);
+        dest.writeString(requestId);
     }
 
     public final static Creator<BranchAutoSuggestResult> CREATOR = new Creator<BranchAutoSuggestResult>() {
@@ -58,7 +64,8 @@ public class BranchAutoSuggestResult implements Parcelable {
         public BranchAutoSuggestResult createFromParcel(Parcel source) {
             List<BranchAutoSuggestion> suggestions = new ArrayList<>();
             source.readTypedList(suggestions, BranchAutoSuggestion.CREATOR);
-            return new BranchAutoSuggestResult(suggestions);
+            String requestId = source.readString();
+            return new BranchAutoSuggestResult(suggestions, requestId);
         }
 
         @Override
