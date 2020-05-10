@@ -1,6 +1,8 @@
 apply plugin: 'com.android.application'
 
-archivesBaseName = project.name + "-" + project.VERSION_NAME
+def branchKey = 'INSERT YOUR BRANCH KEY'
+
+archivesBaseName = project.name + "-" + project.VERSION_NAME + "-" + branchKey
 
 android {
     compileSdkVersion 29
@@ -11,6 +13,8 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName project.VERSION_NAME
+
+        manifestPlaceholders = [branchKey:branchKey]
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

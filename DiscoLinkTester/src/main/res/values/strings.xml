@@ -1,4 +1,0 @@
-<resources>
-    <string name="app_name">Disco Link Tester</string>
-    <string name="sdk_not_initialized">The Branch SDK could not be initialized!  Please check to make sure your keys are correct in the manifest.</string>
-</resources>
