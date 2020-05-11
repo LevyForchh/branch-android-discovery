@@ -11,8 +11,8 @@ import org.json.JSONObject;
 
 class BranchSearchInterface {
     static final String BRANCH_SEARCH_URL = "https://vulcan.branch.io/v1/search/";
-    private static final String BRANCH_QUERYHINT_URL = "https://vulcan.branch.io/v2/queryhint";
-    private static final String BRANCH_AUTOSUGGEST_URL = "https://vulcan.branch.io/v2/autosuggest";
+    static final String BRANCH_QUERYHINT_URL = "https://vulcan.branch.io/v2/queryhint";
+    static final String BRANCH_AUTOSUGGEST_URL = "https://vulcan.branch.io/v2/autosuggest";
     private static final String BRANCH_SERVICE_ENABLED_URL_PREFIX = "https://vulcan.branch.io/configuration/";
     private static final String BRANCH_SERVICE_ENABLED_URL_SUFFIX = ".json";
 

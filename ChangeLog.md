@@ -1,4 +1,8 @@
 # Branch Android SDK change log
+- 1.5.12
+  * _*Master Release*_ - May 11, 2020
+  * Encrypt search/hints/autosuggest payloads
+
 - v1.5.11
   * _*Master Release*_ - April 16, 2020
   * Ensure intent flags are respected whenever starting a new Activity

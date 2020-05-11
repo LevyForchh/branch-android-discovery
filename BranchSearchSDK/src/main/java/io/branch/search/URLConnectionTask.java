@@ -13,9 +13,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.security.SecureRandom;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -60,7 +62,7 @@ class URLConnectionTask extends AsyncTask<Void, Void, JSONObject> {
                     .toString();
             sLastGetRTT = -1;
         }
-        return new URLConnectionTask(url, new Request.Builder().get(), callback, false);
+        return new URLConnectionTask(url, null, callback, false);
     }
 
     /**
@@ -80,28 +82,30 @@ class URLConnectionTask extends AsyncTask<Void, Void, JSONObject> {
             } catch (JSONException ignore) {}
             sLastPostRTT = -1;
         }
-        Request.Builder builder = new Request.Builder()
-                .post(RequestBody.create(POST_JSON, params.toString()));
-        return new URLConnectionTask(url, builder, callback, true);
+        return new URLConnectionTask(url, params, callback, true);
 
     }
 
     private final String mUrl;
     private final IURLConnectionEvents mCallback;
-    private final Request.Builder mBuilder;
+    private Request.Builder mBuilder;
+    private final JSONObject payload;
+    private JSONObject encryptedPayload;
     private final Object mCallbackCalledLock = new Object();
     private final boolean mIsPost;
     private boolean mCallbackCalled;
+    private String uploadIV;
     @VisibleForTesting Call mCall;
 
     private URLConnectionTask(@NonNull String url,
-                              @NonNull Request.Builder builder,
+                              @Nullable JSONObject params,
                               @Nullable IURLConnectionEvents callback,
                               boolean isPost) {
         mUrl = url;
-        mBuilder = builder;
+        payload = params;
         mCallback = callback;
         mIsPost = isPost;
+        this.uploadIV = String.format(new Locale("en", "US"), "%.0f", (Math.random() * Math.pow(10, 16)));
     }
 
     @Override
@@ -137,6 +141,22 @@ class URLConnectionTask extends AsyncTask<Void, Void, JSONObject> {
     protected JSONObject doInBackground(Void... voids) {
         // If POST, we should have Content-Type: application/json in the request,
         // but this should be already done by OkHttp when creating the post body.
+        if (payload == null) {
+            mBuilder = new Request.Builder().get();
+        } else if (mUrl.equals(BranchSearchInterface.BRANCH_SEARCH_URL) ||
+                mUrl.equals(BranchSearchInterface.BRANCH_QUERYHINT_URL) ||
+                mUrl.equals(BranchSearchInterface.BRANCH_AUTOSUGGEST_URL)) {
+            try {
+                String cipherText = Branchcryption.encrypt(payload.toString(), uploadIV).trim();
+                encryptedPayload = new JSONObject().put(Branchcryption.jsonKeyData, cipherText).put(Branchcryption.jsonKeyIV, uploadIV);
+                mBuilder = new Request.Builder().post(RequestBody.create(POST_JSON, encryptedPayload.toString()));
+                mBuilder.addHeader(Branchcryption.headerKey, Branchcryption.keyId);
+            } catch (Exception e) {
+                mBuilder = new Request.Builder().post(RequestBody.create(POST_JSON, payload.toString()));
+            }
+        } else {
+            mBuilder = new Request.Builder().post(RequestBody.create(POST_JSON, payload.toString()));
+        }
         mBuilder.addHeader("Accept", "application/json");
         // Do NOT add "Accept-Encoding"! Instead, rely on OkHttp adding that automatically,
         // which is done in their BridgeInterceptor. If we do add 'just to be sure', then
@@ -180,6 +200,18 @@ class URLConnectionTask extends AsyncTask<Void, Void, JSONObject> {
                 result = new JSONObject(body);
             } catch (JSONException ignore) {
                 return new BranchSearchError(BranchSearchError.ERR_CODE.INTERNAL_SERVER_ERR);
+            }
+            boolean requestWasEncrypted = encryptedPayload != null;
+            if (requestWasEncrypted &&
+                    Branchcryption.keyId.equals(response.header(Branchcryption.headerKey)) &&
+                    result.has(Branchcryption.jsonKeyData) &&
+                    result.has(Branchcryption.jsonKeyIV)) {
+                try {
+                    String responseIV = result.getString(Branchcryption.jsonKeyIV);
+                    result = new JSONObject(Branchcryption.decrypt(result.getString(Branchcryption.jsonKeyData), responseIV));
+                } catch (Exception e) {
+                    return new BranchSearchError(BranchSearchError.ERR_CODE.INTERNAL_SERVER_ERR);
+                }
             }
 
             if (code == 200) {
